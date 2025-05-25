@@ -1,8 +1,7 @@
 package com.example.stageconnect.presentation.screens.savedjobs.screens
 
-import androidx.compose.foundation.Image
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,11 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,45 +21,76 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
 import com.example.stageconnect.presentation.components.CustomOfferCard
+import com.example.stageconnect.presentation.components.ErrorMessage
 import com.example.stageconnect.presentation.components.NotFound
-import com.example.stageconnect.presentation.screens.jobdetails.components.JobDetailsViewModel
+import com.example.stageconnect.presentation.components.ObserveResult
+import com.example.stageconnect.presentation.screens.offer.viewmodel.JobDetailsViewModel
 import com.example.stageconnect.presentation.screens.savedjobs.components.CustomDialog
 import com.example.stageconnect.presentation.screens.search.components.CustomSearchBar
 import com.example.stageconnect.presentation.viewmodels.OfferViewModel
-import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
-import kotlinx.coroutines.delay
 
 @Composable
 fun SavedJobsScreen(modifier: Modifier = Modifier,
                     filterViewModel: OfferViewModel = hiltViewModel(),
+                    offerViewModel: OfferViewModel = hiltViewModel(),
                     jobDetailsViewModel: JobDetailsViewModel,
                     onFilterClick: () -> Unit,
+                    onOfferCardClick: () -> Unit,
                     onDismiss: () -> Unit
 ) {
 
     val filteredItems by filterViewModel.filteredOffers.observeAsState(initial = emptyList())
     var searchedText by remember { mutableStateOf("") }
-    var ready by remember { mutableStateOf(false) }
+    val isLoading = remember { mutableStateOf(false) }
+    val isButtonLoading = remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val unSavedMessage = stringResource(R.string.un_saved_offer)
+
+    val getAllSavedOfferResult by offerViewModel.getAllSavedOfferResult.observeAsState()
+    val unSavedOfferResult by offerViewModel.saveOfferResult.observeAsState()
+
     LaunchedEffect(Unit) {
-        delay(500)
-        ready = true
+        offerViewModel.getAllSavedOffer()
     }
 
-    if (ready){
+    ObserveResult(
+        result = getAllSavedOfferResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+        },
+        onError = {
+            isLoading.value = false
+            ErrorMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    ObserveResult(
+        result = unSavedOfferResult,
+        onLoading = {isButtonLoading.value = true},
+        onSuccess = {
+            isButtonLoading.value = false
+            showDialog = false
+            offerViewModel.saveOnlySavedOffers()
+        },
+        onError = {
+            isButtonLoading.value = false
+            ErrorMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    if (!isLoading.value){
         Column(modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
             //Header
@@ -104,25 +131,32 @@ fun SavedJobsScreen(modifier: Modifier = Modifier,
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ){
                         items(filteredItems.size){ index ->
                             filteredItems[index].isSaved = true
-                            CustomOfferCard(offer = filteredItems[index], isSaveIconDisable = true){ offer ->
+                            CustomOfferCard(
+                                offerDto = filteredItems[index],
+                                isSaveIconDisable = true,
+                                onSavedClick = {offer ->
                                 jobDetailsViewModel.setOffer(offer)
                                 showDialog = true
+                            }
+                            ){ offer ->
+                                jobDetailsViewModel.setOffer(offer)
+                                onOfferCardClick()
                             }
                         }
                     }
                     if (showDialog){
-                        jobDetailsViewModel.offer.value?.let {
-                            CustomDialog(
-                                label = stringResource(R.string.remove_from_saved),
-                                offer = it,
-                                onDismiss = {showDialog = false}
-                            ) { }
+                        CustomDialog(
+                            label = stringResource(R.string.remove_from_saved),
+                            offer = jobDetailsViewModel.offer.value!!,
+                            isLoading = isButtonLoading,
+                            onDismiss = {showDialog = false}
+                        ) { offer ->
+                            offerViewModel.saveOffer(offerDto = offer, unSavedOfferMessage = unSavedMessage, context = context)
                         }
                     }
                 }
@@ -131,7 +165,11 @@ fun SavedJobsScreen(modifier: Modifier = Modifier,
             }
         }
     }else{
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             CircularProgressIndicator()
         }
     }

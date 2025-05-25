@@ -46,11 +46,13 @@ fun CustomTopAppBar(modifier: Modifier = Modifier,
             )
         },
         navigationIcon = {
-            IconButton(onClick = { onDismiss() }) {
-                Icon(
-                   painter = painterResource(navigationIcon),
-                    contentDescription = "navigationIcon"
-                )
+            if (navigationIcon != -1){
+                IconButton(onClick = { onDismiss() }) {
+                    Icon(
+                        painter = painterResource(navigationIcon),
+                        contentDescription = "navigationIcon"
+                    )
+                }
             }
         },
         actions = {

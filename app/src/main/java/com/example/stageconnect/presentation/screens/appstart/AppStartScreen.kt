@@ -35,7 +35,7 @@ import com.example.stageconnect.ui.theme.ReemKufiInkRegular
 @Composable
 fun AppStartScreen(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,5 +1,8 @@
 package com.example.stageconnect.presentation.screens.filter.components
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -40,16 +43,23 @@ fun CustomFilterCard(
     criteria: List<String>,
     isCheckedMap: Map<String, MutableState<Boolean>>,
     isExpended: Boolean,
+    width: Float = 0.95f,
     onCheck: (Int, String, String, Boolean) -> Unit,
     onExpandToggle: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .heightIn(min = 50.dp)
-            .fillMaxWidth(0.95f)
+            .fillMaxWidth(width)
             .clip(RoundedCornerShape(20.dp))
             .border(1.dp, BackgroundGray_, RoundedCornerShape(20.dp))
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = FastOutSlowInEasing
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(

@@ -1,30 +1,61 @@
 package com.example.stageconnect.presentation.screens.applications.viewmodels
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.stageconnect.data.dummy.DummyDataProvider
-import com.example.stageconnect.data.model.Application
-import com.example.stageconnect.data.model.Offer
+import androidx.lifecycle.viewModelScope
+import com.example.stageconnect.data.dtos.ApplicationDto
+import com.example.stageconnect.data.dtos.OfferDto
+import com.example.stageconnect.data.remote.repository.StorageRepository
+import com.example.stageconnect.domain.CONSTANT.JWT_TOKEN
+import com.example.stageconnect.domain.CONSTANT.USER_ID
+import com.example.stageconnect.domain.model.Application
+import com.example.stageconnect.domain.model.enums.STATUS
+import com.example.stageconnect.domain.result.Result
 import com.example.stageconnect.domain.usecases.FilterUseCase
+import com.example.stageconnect.domain.usecases.create.CreateApplicationUseCase
+import com.example.stageconnect.domain.usecases.delete.DeleteApplicationUseCase
+import com.example.stageconnect.domain.usecases.read.GetRecruiterApplicationsUseCase
+import com.example.stageconnect.domain.usecases.read.GetStudentApplicationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import okio.Path.Companion.toPath
 import javax.inject.Inject
 
 @HiltViewModel
 class ApplicationViewModel @Inject constructor(
-    private var filterUseCase: FilterUseCase
+    private var filterUseCase: FilterUseCase,
+    private var storageRepository: StorageRepository,
+    private val createApplicationUseCase: CreateApplicationUseCase,
+    private val getStudentApplicationsUseCase: GetStudentApplicationsUseCase,
+    private val getRecruiterApplicationsUseCase: GetRecruiterApplicationsUseCase,
+    private val deleteApplicationUseCase: DeleteApplicationUseCase
 ) : ViewModel()  {
-    private val _applications = MutableLiveData<List<Application>>(DummyDataProvider.applications)
-    val applications: LiveData<List<Application>> get() = _applications
 
-    private val _filteredApplications = MutableLiveData<List<Application>>(DummyDataProvider.applications)
-    val filteredApplications: LiveData<List<Application>> get() = _filteredApplications
+    private val _applications = MutableLiveData<List<ApplicationDto>>()
 
-    private val _application = mutableStateOf<Application?>(null)
-    val application: State<Application?> = _application
+    private val _filteredApplications = MutableLiveData<List<ApplicationDto>>()
+    val filteredApplications: LiveData<List<ApplicationDto>> get() = _filteredApplications
+    
+    private val _application = mutableStateOf<ApplicationDto?>(null)
+    val application: State<ApplicationDto?> = _application
 
+    private val _createApplication = MutableLiveData<Result<ApplicationDto>?>()
+    val createApplication: LiveData<Result<ApplicationDto>?> get() = _createApplication
+
+    private val _getStudentApplicationResult = MutableLiveData<Result<List<ApplicationDto>>?>()
+    val getStudentApplicationResult: LiveData<Result<List<ApplicationDto>>?> get() = _getStudentApplicationResult
+
+    private val _getRecruiterApplicationResult = MutableLiveData<Result<List<ApplicationDto>>?>()
+    val getRecruiterApplicationResult: LiveData<Result<List<ApplicationDto>>?> get() = _getRecruiterApplicationResult
+
+    private val _deleteApplicationResult = MutableLiveData<Result<Boolean>?>()
+    val deleteApplicationResult: LiveData<Result<Boolean>?> get() = _deleteApplicationResult
 
     fun applyFilter(searchedText: String) {
         if(searchedText.isEmpty()){
@@ -35,8 +66,77 @@ class ApplicationViewModel @Inject constructor(
         }
     }
 
-    fun setApplication(newApplication: Application){
+    fun setApplication(newApplication: ApplicationDto){
         _application.value = newApplication
     }
 
+    fun createApplication(request: ApplicationDto, file: Uri){
+        request.studentId = storageRepository.get(USER_ID)!!.toLong()
+        viewModelScope.launch {
+            _createApplication.postValue(Result.Loading())
+            delay(100)
+            try {
+                val result = createApplicationUseCase.execute(request, file)
+                _createApplication.postValue(Result.Success(result))
+                clearData()
+            } catch (e: Exception) {
+                _createApplication.postValue(Result.Error(e))
+            }
+        }
+    }
+    
+    fun getStudentApplication(){
+        val studentId = storageRepository.get(USER_ID)!!.toLong()
+        viewModelScope.launch {
+            _getStudentApplicationResult.postValue(Result.Loading())
+            delay(300)
+            try {
+                val result = getStudentApplicationsUseCase.execute(studentId)
+                _applications.value = result
+                _filteredApplications.value = result
+                _getStudentApplicationResult.postValue(Result.Success(result))
+                clearData()
+            } catch (e: Exception) {
+                _getStudentApplicationResult.postValue(Result.Error(e))
+            }
+        }
+    }
+
+    fun getRecruiterApplication(){
+        val recruiterId = storageRepository.get(USER_ID)!!.toLong()
+        viewModelScope.launch {
+            _getRecruiterApplicationResult.postValue(Result.Loading())
+            delay(300)
+            try {
+                val result = getRecruiterApplicationsUseCase.execute(recruiterId)
+                _applications.value = result
+                _filteredApplications.value = result
+                _getRecruiterApplicationResult.postValue(Result.Success(result))
+                clearData()
+            } catch (e: Exception) {
+                _getRecruiterApplicationResult.postValue(Result.Error(e))
+            }
+        }
+    }
+
+    fun deleteApplication(applicationId: Long){
+        val studentId = storageRepository.get(USER_ID)!!.toLong()
+        viewModelScope.launch {
+            _deleteApplicationResult.postValue(Result.Loading())
+            delay(300)
+            try {
+                deleteApplicationUseCase.execute(applicationId, studentId)
+                _deleteApplicationResult.postValue(Result.Success(true))
+                clearData()
+            } catch (e: Exception) {
+                _deleteApplicationResult.postValue(Result.Error(e))
+            }
+        }
+    }
+    
+    fun clearData(){
+        _createApplication.value = null
+        _getStudentApplicationResult.value = null
+        _deleteApplicationResult.value = null
+    }
 }

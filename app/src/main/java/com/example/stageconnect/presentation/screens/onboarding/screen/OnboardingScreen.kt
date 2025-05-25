@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun OnboardingScreen(
+    modifier: Modifier,
     onFinish: () -> Unit
 ) {
     val pages = onboardingPages
@@ -41,7 +42,7 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(18.dp),

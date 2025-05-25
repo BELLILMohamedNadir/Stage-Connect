@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,22 +24,60 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
+import com.example.stageconnect.data.dtos.AuthenticationRequest
+import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.AppLogo
 import com.example.stageconnect.presentation.components.CustomCheckbox
+import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.ObserveResult
+import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.presentation.screens.signin.component.CustomEditText
-import com.example.stageconnect.ui.theme.Blue
+import com.example.stageconnect.presentation.screens.signin.viewmodels.SignInViewModel
+import com.example.stageconnect.presentation.screens.signup.viewmodels.RegisterViewModel
 import com.example.stageconnect.ui.theme.BlueFont
 
 @Composable
 fun SignInScreen(modifier: Modifier = Modifier,
                  onForgetPassword: () -> Unit,
-                 onSignIn: () -> Unit,
+                 onStudentSignIn: () -> Unit,
+                 onRecruiterSignIn: () -> Unit,
                  onSignUp: () -> Unit,
-                 onSignUpWithGoogle: () -> Unit,) {
+                 onSignUpWithGoogle: () -> Unit,
+                 signInViewModel: SignInViewModel = hiltViewModel(),
+                 profileViewModel: ProfileViewModel,
+                 registerViewModel: RegisterViewModel
+) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val isLoading = remember { mutableStateOf(false) }
+
+    val authenticationResult by signInViewModel.authenticationResult.observeAsState()
+
+    ObserveResult(
+        result = authenticationResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            if (it.role == ROLE.STUDENT.name){
+                profileViewModel.setStudent(it)
+                onStudentSignIn()
+            }
+            else{
+                if (it.role == ROLE.RECRUITER.name){
+                    profileViewModel.setRecruiter(it)
+                    onRecruiterSignIn()
+                }
+            }
+        },
+        onError = {
+            isLoading.value = false
+            ErrorMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
     Column(
         modifier = modifier.fillMaxSize().padding(vertical = 24.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -61,7 +101,7 @@ fun SignInScreen(modifier: Modifier = Modifier,
                 leadingIcon = R.drawable.ic_password,
                 isPassword = true,
                 trailingIcon = R.drawable.ic_open_eye,
-                colorTint = Blue,
+                colorTint = Color.Black,
                 hint = "",
                 label = stringResource(R.string.password)
             )
@@ -78,11 +118,19 @@ fun SignInScreen(modifier: Modifier = Modifier,
             AppButton(
                 modifier = Modifier.fillMaxWidth(fraction = 0.9f),
                 text = stringResource(R.string.sign_in),
-                fontWeight = FontWeight.W700
+                fontWeight = FontWeight.W700,
+                isLoading = isLoading
             ) {
-                onSignIn()
+                if (email.value.isNotEmpty() && password.value.isNotEmpty()){
+                    signInViewModel.authenticate(
+                        AuthenticationRequest(
+                            email = email.value.trim(),
+                            password = password.value.trim()
+                        )
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             //sign up
             Row {
                 Text(
@@ -99,7 +147,11 @@ fun SignInScreen(modifier: Modifier = Modifier,
                     color = BlueFont,
                     fontWeight = FontWeight.W500,
                     modifier = Modifier.clickable {
-                        onSignUp()
+                        if (email.value.isNotEmpty() && password.value.isNotEmpty()){
+                            registerViewModel.setEmail(email.value.trim())
+                            registerViewModel.setPassword(password.value.trim())
+                            onSignUp()
+                        }
                     }
                 )
             }

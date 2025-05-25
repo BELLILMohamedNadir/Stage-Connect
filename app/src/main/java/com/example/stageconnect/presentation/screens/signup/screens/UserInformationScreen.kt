@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.signup.screens
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -14,43 +15,123 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.stageconnect.R
+import com.example.stageconnect.data.dtos.EstablishmentsDto
+import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomEditText
-import com.example.stageconnect.presentation.screens.signup.viewmodels.UserInformationViewModel
+import com.example.stageconnect.presentation.screens.signup.viewmodels.RegisterViewModel
+import com.example.stageconnect.domain.result.Result
+import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
+
 
 @Composable
 fun UserInformationScreen(modifier: Modifier = Modifier,
-                          viewModel: UserInformationViewModel = hiltViewModel(),
+                          viewModel: ProfileViewModel = hiltViewModel(),
+                          registerViewModel: RegisterViewModel,
                           onNext: () -> Unit) {
+
+
     val inputFields = listOf(
         stringResource(R.string.first_name) to -1,
         stringResource(R.string.middle_or_last_name) to -1,
         stringResource(R.string.date_of_birth) to R.drawable.ic_calender,
-        stringResource(R.string.email) to R.drawable.ic_email_,
+        stringResource(R.string.university) to R.drawable.ic_university,
         stringResource(R.string.phone_number) to R.drawable.ic_phone,
         stringResource(R.string.gender) to R.drawable.ic_polygon
     )
 
     val imageUri by viewModel.imageUri
 
+    val male = stringResource(R.string.male)
+    val context = LocalContext.current
+    val isLoading = remember { mutableStateOf(false) }
+    var firstName by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var dateOfBirth by remember { mutableStateOf("") }
+    var establishmentId by remember { mutableLongStateOf(-1L) }
+    var phoneNumber by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf(male) }
+    val establishments : MutableList<EstablishmentsDto>  = mutableListOf()
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { viewModel.onImageSelected(it) }
     }
+
+    val registerResult by registerViewModel.registerResult.observeAsState()
+    val getAllEstablishmentResult by registerViewModel.getAllEstablishmentResult.observeAsState()
+
+    registerResult?.let { result ->
+        when (result) {
+            is Result.Loading -> {
+                isLoading.value = true
+            }
+
+            is Result.Success -> {
+                isLoading.value = false
+                registerViewModel.clearData()
+                onNext()
+            }
+
+            is Result.Error -> {
+                isLoading.value = false
+                Toast.makeText(context, "Error occurred, try again", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    getAllEstablishmentResult?.let { result ->
+        when (result) {
+            is Result.Loading -> {
+
+            }
+
+            is Result.Success -> {
+                establishments.addAll(result.data)
+            }
+
+            is Result.Error -> {
+                Toast.makeText(context, "Error occurred, try again", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (getAllEstablishmentResult == null || getAllEstablishmentResult !is Result.Success) {
+            registerViewModel.getAllEstablishment()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            registerViewModel.resetEstablishments()
+        }
+    }
+
 
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
@@ -79,27 +160,54 @@ fun UserInformationScreen(modifier: Modifier = Modifier,
         inputFields.forEach { (label, icon) ->
             when(label){
                 stringResource(R.string.gender) -> {
-                    CustomEditText(label = label, icon = icon,
+                    CustomEditText(label = label, trailingIcon = icon,
                         list = listOf(stringResource(R.string.male), stringResource(R.string.female)),
-                        onValueChange = {})
+                        onValueChange = {gender = it})
                 }
                 stringResource(R.string.date_of_birth) -> {
-                    CustomEditText(label = label, icon = icon, isDate = true, onValueChange = {})
+                    CustomEditText(label = label, trailingIcon = icon, isDate = true, imeAction = ImeAction.Next, onValueChange = {dateOfBirth = it})
                 }
                 stringResource(R.string.phone_number) -> {
-                    CustomEditText(label = label, icon = icon, keyboardType = KeyboardType.Number) { }
+                    CustomEditText(label = label, trailingIcon = icon, imeAction = ImeAction.Next, keyboardType = KeyboardType.Number) { phoneNumber = it}
                 }
-                stringResource(R.string.email) -> {
-                    CustomEditText(label = label, icon = icon, keyboardType = KeyboardType.Email) { }
+                stringResource(R.string.university) -> {
+                    CustomEditText(
+                        label = label,
+                        establishmentList = establishments,
+                        hasEstablishmentList = true,
+                        trailingIcon = icon,
+                        onEstablishmentValueChange = {
+                            establishmentId = it
+                        }) {
+                    }
+                }
+                stringResource(R.string.first_name) -> {
+                    CustomEditText(label = label, imeAction = ImeAction.Next, trailingIcon = icon) { firstName = it}
                 }
                 else -> {
-                    CustomEditText(label = label, icon = icon) { }
+                    CustomEditText(label = label, imeAction = ImeAction.Next, trailingIcon = icon) { name = it}
                 }
             }
         }
 
-        AppButton(text = stringResource(R.string.continue_)) {
-            onNext()
+        AppButton(text = stringResource(R.string.continue_), isLoading = isLoading) {
+            if (establishmentId != -1L){
+                val userDto = UserDto(
+                    name =  name,
+                    firstName =  firstName,
+                    dateOfBirth =  dateOfBirth,
+                    email =  registerViewModel.getEmail()!!,
+                    password =  registerViewModel.getPassword()!!,
+                    role = registerViewModel.getRole()!!,
+                    phone = phoneNumber,
+                    gender =  gender,
+                    establishmentId = establishmentId,
+                    expertises = registerViewModel.getExpertise()!!
+                )
+                registerViewModel.register(userDto, imageUri)
+            }else{
+                Toast.makeText(context, "Select an establishment", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

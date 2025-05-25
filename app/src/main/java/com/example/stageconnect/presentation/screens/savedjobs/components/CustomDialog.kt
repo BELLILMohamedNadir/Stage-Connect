@@ -2,6 +2,7 @@ package com.example.stageconnect.presentation.screens.savedjobs.components
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,21 +28,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.stageconnect.R
-import com.example.stageconnect.data.model.Offer
+import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomOfferCard
-import com.example.stageconnect.ui.theme.BackgroundGray
 import com.example.stageconnect.ui.theme.BackgroundGray_
 import com.example.stageconnect.ui.theme.Blue
+import com.example.stageconnect.ui.theme.RedFont
 import com.example.stageconnect.ui.theme.SoftBlue
 
 
 @Composable
 fun CustomDialog(modifier: Modifier = Modifier,
-                       label: String,
-                       offer: Offer,
-                       onDismiss: ()->Unit,
-                       onClick: (Offer) -> Unit) {
+                 label: String,
+                 offer: OfferDto,
+                 isLoading: MutableState<Boolean>,
+                 onDismiss: ()->Unit,
+                 onClick: (OfferDto) -> Unit) {
     Dialog(
         onDismissRequest = { onDismiss() },
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -76,7 +78,7 @@ fun CustomDialog(modifier: Modifier = Modifier,
                 Spacer(modifier = Modifier.height(24.dp))
 
 
-                CustomOfferCard(offer = offer, isSaveIconDisable = true)
+                CustomOfferCard(offerDto = offer, isSaveIconDisable = true)
 
                 // ---------------------------------------
                 Spacer(modifier = Modifier.height(30.dp))
@@ -91,20 +93,26 @@ fun CustomDialog(modifier: Modifier = Modifier,
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 16.dp, start = 16.dp, top = 20.dp, bottom = 16.dp)
+                        .padding(end = 16.dp, start = 16.dp, top = 20.dp, bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AppButton(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.cancel),
-                        contentColor = Blue,
-                        containerColor = SoftBlue
-                    ) {
-                        onDismiss()
+                    if (!isLoading.value){
+                        AppButton(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(R.string.cancel),
+                            contentColor = Blue,
+                            containerColor = SoftBlue
+                        ) {
+                            onDismiss()
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
                     AppButton(
                         modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.yes_remove)
+                        text = stringResource(R.string.yes_remove),
+                        containerColor = RedFont,
+                        isLoading = isLoading
                     ) {
                         onClick(offer)
                     }

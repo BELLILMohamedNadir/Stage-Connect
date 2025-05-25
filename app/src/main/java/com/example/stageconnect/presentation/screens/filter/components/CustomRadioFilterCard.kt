@@ -1,5 +1,8 @@
 package com.example.stageconnect.presentation.screens.filter.components
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,19 +15,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonColors
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,13 +36,13 @@ import com.example.stageconnect.R
 import com.example.stageconnect.ui.theme.BackgroundGray_
 import com.example.stageconnect.ui.theme.Blue
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
-import com.example.stageconnect.ui.theme.SoftBlue
 
 @Composable
 fun CustomRadioFilterCard(
     criterion: String,
     options: List<String>,
-    selectedOption: String,
+    selectedOption: MutableState<String>,
+    width: Float = 0.95f,
     onOptionSelected: (String) -> Unit,
     isExpanded: Boolean,
     onExpanded: () -> Unit
@@ -52,10 +50,16 @@ fun CustomRadioFilterCard(
     Column(
         modifier = Modifier
             .heightIn(min = 50.dp)
-            .fillMaxWidth(0.95f)
+            .fillMaxWidth(width)
             .clip(RoundedCornerShape(20.dp))
             .border(1.dp, BackgroundGray_, RoundedCornerShape(20.dp))
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = FastOutSlowInEasing
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -99,7 +103,7 @@ fun CustomRadioFilterCard(
                             .clickable { onOptionSelected(option) }
                     ) {
                         RadioButton(
-                            selected = selectedOption == option,
+                            selected = selectedOption.value == option,
                             onClick = { onOptionSelected(option) },
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = Blue,

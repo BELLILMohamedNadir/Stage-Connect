@@ -4,17 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +26,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stageconnect.R
@@ -42,11 +41,14 @@ fun CustomSearchBar(
     hint: String = stringResource(R.string.search_for_a_job_or_company),
     leadingIcon: Int = R.drawable.ic_search,
     trailingIcon: Int = R.drawable.ic_filter,
+    withDoneClick: Boolean = false,
     onFilterClick: () -> Unit = {},
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit = {},
+    onDoneAction: (String) -> Unit = {}
 ) {
     var text by remember { resetText }
     var isFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     TextField(
         value = text,
@@ -59,7 +61,11 @@ fun CustomSearchBar(
             .height(54.dp)
             .clip(RoundedCornerShape(15.dp))
             .background(Color.White)
-            .border(width = 1.dp, color = if (isFocused) Blue else Color.Transparent, shape = RoundedCornerShape(15.dp))
+            .border(
+                width = 1.dp,
+                color = if (isFocused) Blue else Color.Transparent,
+                shape = RoundedCornerShape(15.dp)
+            )
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused
             },
@@ -67,16 +73,22 @@ fun CustomSearchBar(
             Text(text = hint, color = Color.Gray, fontWeight = FontWeight.W500, fontSize = 14.sp)
         },
         leadingIcon = {
-            Icon(painter = painterResource(leadingIcon),
-                contentDescription = "Search Icon",
-                tint = if(isFocused) Blue else Color.Unspecified)
+            if (leadingIcon != -1) {
+                Icon(
+                    painter = painterResource(leadingIcon),
+                    contentDescription = "Search Icon",
+                    tint = if (isFocused) Blue else Color.Unspecified
+                )
+            }
         },
         trailingIcon = {
-            if (trailingIcon != -1){
-                IconButton(onClick = {onFilterClick()}) {
-                    Icon(painter = painterResource(trailingIcon),
+            if (trailingIcon != -1) {
+                IconButton(onClick = { onFilterClick() }) {
+                    Icon(
+                        painter = painterResource(trailingIcon),
                         contentDescription = "filter Icon",
-                        tint = Color.Unspecified)
+                        tint = Color.Unspecified
+                    )
                 }
             }
         },
@@ -87,7 +99,19 @@ fun CustomSearchBar(
             unfocusedBorderColor = Color.Transparent,
             unfocusedContainerColor = BackgroundGray,
             cursorColor = Blue,
+        ),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                if (withDoneClick) {
+                    onDoneAction(text)
+                    text = ""
+                }
+                focusManager.clearFocus()
+            }
         )
     )
-
 }
+

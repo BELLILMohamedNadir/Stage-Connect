@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.example.stageconnect.R
 import com.example.stageconnect.domain.model.SearchCriterion
 import com.example.stageconnect.presentation.components.AppButton
+import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
 import com.example.stageconnect.presentation.screens.filter.components.CustomFilterCard
 import com.example.stageconnect.presentation.screens.filter.components.CustomRadioFilterCard
 import com.example.stageconnect.presentation.screens.filter.components.LocationSalaryFilterCard
@@ -69,7 +70,7 @@ fun FilterScreen(modifier: Modifier = Modifier) {
     }
 
     // State to track the selected radio button option.
-    var selectedRadioButtonOption by remember { mutableStateOf("") }
+    var selectedRadioButtonOption = remember { mutableStateOf("") }
 
     // Default value for the salary filter, which is per month.
     val defaultValue = stringResource(R.string.per_month)
@@ -90,151 +91,139 @@ fun FilterScreen(modifier: Modifier = Modifier) {
     // Get the context for showing Toast messages.
     val context = LocalContext.current
 
-    // LaunchedEffect to simulate screen readiness with a small delay.
-    LaunchedEffect(Unit) {
-        delay(500)
-        ready = true
-    }
 
     // Conditionally show the content only when the screen is ready.
-    if (ready) {
-        // Main UI column that contains filters and buttons.
-        Column(
-            modifier = modifier.fillMaxSize(),
+    // Main UI column that contains filters and buttons.
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Spacer to separate filter list from the top of the screen.
+        Spacer(modifier = Modifier.height(1.dp).fillMaxWidth(0.9f).background(BackgroundGray_))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // LazyColumn to display each criterion filter as a list.
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = 10.dp),
+            contentPadding = PaddingValues(bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Spacer to separate filter list from the top of the screen.
-            Spacer(modifier = Modifier.height(1.dp).fillMaxWidth(0.9f).background(BackgroundGray_))
-            Spacer(modifier = Modifier.height(20.dp))
+            // Iterate over each search criterion and display the corresponding filter UI.
+            itemsIndexed(criterion) { index, criteria ->
+                // Determine if the current filter section is expanded or collapsed.
+                val isExpanded = expandedStates[index] ?: true
 
-            // LazyColumn to display each criterion filter as a list.
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 10.dp),
-                contentPadding = PaddingValues(bottom = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Iterate over each search criterion and display the corresponding filter UI.
-                itemsIndexed(criterion) { index, criteria ->
-                    // Determine if the current filter section is expanded or collapsed.
-                    val isExpanded = expandedStates[index] ?: true
-
-                    // Initialize checkbox state for each criterion if not already done.
-                    checkboxStates.getOrPut(index) {
-                        initializeCheckboxSubMap(criteria)
-                    }
-
-                    // Display appropriate filter UI based on the criterion type.
-                    when(criteria) {
-                        // Handle Location and Salary filter.
-                        is SearchCriterion.LocationAndSalaryCriterion -> {
-                            LocationSalaryFilterCard(
-                                criterion = criteria.name,
-                                resetSearchText = resetSearchText,
-                                onLocationChange = { location = it },
-                                salaryRange = initialRange,
-                                currentRange = salaryRange,
-                                onSalaryChange = {
-                                    salaryRange = it
-                                    // Update selected salary range in checkedItems.
-                                    checkedItems[criteria.name] = mutableListOf("${it.start.toInt()} - ${it.endInclusive.toInt()} €")
-                                },
-                                isExpanded = isExpanded,
-                                onExpanded = { expandedStates[index] = !isExpanded }
-                            )
-                        }
-                        // Handle Work Type filter with radio buttons.
-                        is SearchCriterion.WorkTypeCriterion -> {
-                            if (selectedRadioButtonOption.isNotEmpty()) {
-                                checkedItems[criteria.name] = mutableListOf(selectedRadioButtonOption)
-                            }
-
-                            CustomRadioFilterCard(
-                                criterion = criteria.name,
-                                options = criteria.criteria,
-                                selectedOption = selectedRadioButtonOption,
-                                onOptionSelected = { selected ->
-                                    selectedRadioButtonOption = selected
-                                    checkedItems[criteria.name] = mutableListOf(selected)
-                                },
-                                isExpanded = isExpanded,
-                                onExpanded = { expandedStates[index] = !isExpanded }
-                            )
-                        }
-                        // Handle other custom filters with checkboxes.
-                        else -> {
-                            InitializeCustomFilterCard(
-                                index = index,
-                                criterion = criteria.name,
-                                criteria = criteria.criteria,
-                                isCheckedMap = checkboxStates[index] ?: emptyMap(),
-                                isExpanded = isExpanded,
-                                onCheck = { i, criterionName, selectedCriteria, checked ->
-                                    handleCheckState(
-                                        index = i,
-                                        criterion = criterionName,
-                                        criteria = selectedCriteria,
-                                        checked = checked,
-                                        checkboxStates = checkboxStates,
-                                        checkedItems = checkedItems
-                                    )
-                                }
-                            ) {
-                                expandedStates[index] = !isExpanded
-                            }
-                        }
-                    }
+                // Initialize checkbox state for each criterion if not already done.
+                checkboxStates.getOrPut(index) {
+                    initializeCheckboxSubMap(criteria)
                 }
-            }
 
-            // Footer containing Reset and Apply buttons.
-            Column {
-                Spacer(Modifier.fillMaxWidth().height(1.dp).background(BackgroundGray_))
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
-                    // Reset button: Clears all selected filters.
-                    AppButton(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.reset),
-                        contentColor = Blue,
-                        containerColor = SoftBlue,
-                        fontWeight = FontWeight.Bold
-                    ) {
-                        // Reset all filter states and clear selected items.
-                        checkboxStates.forEach { (_, innerMap) ->
-                            innerMap.forEach { (_, state) -> state.value = false }
-                        }
-                        resetSearchText.value = ""
-                        location = ""
-                        selectedRadioButtonOption = ""
-                        salaryRange = initialRange
-                        checkedItems.clear()
+                // Display appropriate filter UI based on the criterion type.
+                when(criteria) {
+                    // Handle Location and Salary filter.
+                    is SearchCriterion.LocationAndSalaryCriterion -> {
+                        LocationSalaryFilterCard(
+                            criterion = criteria.name,
+                            resetSearchText = resetSearchText,
+                            onLocationChange = { location = it },
+                            salaryRange = initialRange,
+                            currentRange = salaryRange,
+                            onSalaryChange = {
+                                salaryRange = it
+                                // Update selected salary range in checkedItems.
+                                checkedItems[criteria.name] = mutableListOf("${it.start.toInt()} - ${it.endInclusive.toInt()} €")
+                            },
+                            isExpanded = isExpanded,
+                            onExpanded = { expandedStates[index] = !isExpanded }
+                        )
                     }
+                    // Handle Work Type filter with radio buttons.
+                    is SearchCriterion.WorkTypeCriterion -> {
+                        if (selectedRadioButtonOption.value.isNotEmpty()) {
+                            checkedItems[criteria.name] = mutableListOf(selectedRadioButtonOption.value)
+                        }
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // Apply button: Shows the number of selected filters.
-                    AppButton(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.apply),
-                        fontWeight = FontWeight.Bold
-                    ) {
-                        // Flatten the selected items and show a Toast with the count.
-                        val selectedItems = checkedItems.values.flatten().toMutableList()
-                        if (salary.isNotEmpty()) selectedItems.add(salary)
-                        if (location.isNotEmpty()) selectedItems.add(location)
-                        Toast.makeText(context, "${selectedItems.size} items selected", Toast.LENGTH_SHORT).show()
+                        CustomRadioFilterCard(
+                            criterion = criteria.name,
+                            options = criteria.criteria,
+                            selectedOption = selectedRadioButtonOption,
+                            onOptionSelected = { selected ->
+                                selectedRadioButtonOption.value = selected
+                                checkedItems[criteria.name] = mutableListOf(selected)
+                            },
+                            isExpanded = isExpanded,
+                            onExpanded = { expandedStates[index] = !isExpanded }
+                        )
+                    }
+                    // Handle other custom filters with checkboxes.
+                    else -> {
+                        InitializeCustomFilterCard(
+                            index = index,
+                            criterion = criteria.name,
+                            criteria = criteria.criteria,
+                            isCheckedMap = checkboxStates[index] ?: emptyMap(),
+                            isExpanded = isExpanded,
+                            onCheck = { i, criterionName, selectedCriteria, checked ->
+                                handleCheckState(
+                                    index = i,
+                                    criterion = criterionName,
+                                    criteria = selectedCriteria,
+                                    checked = checked,
+                                    checkboxStates = checkboxStates,
+                                    checkedItems = checkedItems
+                                )
+                            }
+                        ) {
+                            expandedStates[index] = !isExpanded
+                        }
                     }
                 }
             }
         }
-    } else {
-        // Show a loading spinner while the screen is being prepared.
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+
+        // Footer containing Reset and Apply buttons.
+        Column {
+            Spacer(Modifier.fillMaxWidth().height(1.dp).background(BackgroundGray_))
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
+                // Reset button: Clears all selected filters.
+                AppButton(
+                    modifier = Modifier.weight(1f),
+                    text = stringResource(R.string.reset),
+                    contentColor = Blue,
+                    containerColor = SoftBlue,
+                    fontWeight = FontWeight.Bold
+                ) {
+                    // Reset all filter states and clear selected items.
+                    checkboxStates.forEach { (_, innerMap) ->
+                        innerMap.forEach { (_, state) -> state.value = false }
+                    }
+                    resetSearchText.value = ""
+                    location = ""
+                    selectedRadioButtonOption.value = ""
+                    salaryRange = initialRange
+                    checkedItems.clear()
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Apply button: Shows the number of selected filters.
+                AppButton(
+                    modifier = Modifier.weight(1f),
+                    text = stringResource(R.string.apply),
+                    fontWeight = FontWeight.Bold
+                ) {
+                    // Flatten the selected items and show a Toast with the count.
+                    val selectedItems = checkedItems.values.flatten().toMutableList()
+                    if (salary.isNotEmpty()) selectedItems.add(salary)
+                    if (location.isNotEmpty()) selectedItems.add(location)
+                    Toast.makeText(context, "${selectedItems.size} items selected", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.signup.screens
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,14 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
+import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.AppLogo
 import com.example.stageconnect.presentation.screens.signup.components.CustomCardView
+import com.example.stageconnect.presentation.screens.signup.viewmodels.RegisterViewModel
 import com.example.stageconnect.ui.theme.BlueFont
 import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
@@ -32,11 +37,10 @@ import com.example.stageconnect.ui.theme.ReemKufiInkRegular
 
 @Composable
 fun ProfileSelectionScreen(modifier: Modifier = Modifier,
-                           onAnIntern: () -> Unit,
-                           onARecruiter: () -> Unit,
-                           onAResponsible: () -> Unit,
-                           onNext: () -> Unit
-                           ) {
+                           registerViewModel: RegisterViewModel,
+                           onNext: () -> Unit) {
+    var role by remember { mutableStateOf(ROLE.STUDENT) }
+
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,7 +74,7 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween) {
-            var selectedIndex by remember { mutableStateOf(-1) }
+            var selectedIndex by remember { mutableStateOf(1) }
             CustomCardView(
                 index = 1,
                 selectedIndex = selectedIndex == 1,
@@ -79,7 +83,7 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                 description = stringResource(R.string.i_want_to_find_an_internship)
             ) {
                 selectedIndex = 1
-                onAnIntern()
+                role = ROLE.STUDENT
             }
             Spacer(modifier = Modifier.height(16.dp))
             CustomCardView(
@@ -90,7 +94,7 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                 description = stringResource(R.string.i_want_to_find_interns)
             ) {
                 selectedIndex = 2
-                onARecruiter()
+                role = ROLE.RECRUITER
             }
             Spacer(modifier = Modifier.height(16.dp))
             CustomCardView(
@@ -101,11 +105,12 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                 description = stringResource(R.string.i_am_an_interns_supervisor)
             ) {
                 selectedIndex = 3
-                onAResponsible()
+                role = ROLE.ESTABLISHMENT
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
         AppButton(text = stringResource(R.string.continue_)) {
+            registerViewModel.setRole(role)
             onNext()
         }
     }

@@ -40,11 +40,11 @@ fun CustomEditText(
     TextField(
         value = text.value,
         onValueChange = { text.value = it },
-        label = {
-            Text(text = label, color = Color.Black)
-        },
+//        label = {
+//            Text(text = label, color = Color.Black)
+//        },
         placeholder = {
-            Text(text = hint, color = Color.Gray)
+            Text(text = label, color = Color.Gray)
         },
         textStyle = TextStyle(fontSize = 16.sp),
         singleLine = true,

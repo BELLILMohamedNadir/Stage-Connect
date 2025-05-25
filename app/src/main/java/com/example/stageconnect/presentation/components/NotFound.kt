@@ -26,7 +26,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 
 @Composable
-fun NotFound(modifier: Modifier = Modifier) {
+fun NotFound(modifier: Modifier = Modifier, showMessage: Boolean = true) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -46,14 +46,16 @@ fun NotFound(modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
-        Text(text = stringResource(R.string.not_found_error_message),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            fontFamily = LibreBaskerVilleBold,
-            fontWeight = FontWeight.W500,
-            fontSize = 16.sp,
-            color = GrayFont,
-            textAlign = TextAlign.Center
-        )
+        if (showMessage){
+            Spacer(modifier = Modifier.height(30.dp))
+            Text(text = stringResource(R.string.not_found_error_message),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                fontFamily = LibreBaskerVilleBold,
+                fontWeight = FontWeight.W500,
+                fontSize = 16.sp,
+                color = GrayFont,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }

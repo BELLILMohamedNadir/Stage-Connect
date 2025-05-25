@@ -33,6 +33,7 @@
     <string name="middle_or_last_name">Middle or Last Name</string>
     <string name="date_of_birth">Date of Birth</string>
     <string name="phone_number">Phone Number</string>
+    <string name="address">Address</string>
     <string name="gender">Gender</string>
     <string name="expertise_accounting">Accounting and finance</string>
     <string name="expertise_engineering">Engineering</string>
@@ -62,6 +63,7 @@
     <string name="job_description_">Job Description :</string>
     <string name="requirements_and_skills">Requirements and skills :</string>
     <string name="education">Education :</string>
+    <string name="education_">Education</string>
     <string name="key_skills">Key Skills :</string>
     <string name="job_summary">Job Summary :</string>
     <string name="company_description">Company Description :</string>
@@ -69,6 +71,7 @@
     <string name="industry_type">Industry Type :</string>
     <string name="functional_area">Functional Area :</string>
     <string name="employment_type">Employment Type :</string>
+    <string name="employment_type_">Employment Type</string>
     <string name="role_category">Role Category :</string>
     <string name="vacancy">Vacancy :</string>
     <string name="website">Website :</string>
@@ -88,4 +91,87 @@
     <string name="delete_application">Delete Application</string>
     <string name="not_found_error_message">Sorry, the keyword you entered cannot be found. Please check again or search with another keyword</string>
     <string name="search_for_a_job_or_company">Search for a job or company</string>
+    <string name="contact_information">Contact Information</string>
+    <string name="summary">Summary</string>
+    <string name="expected_salary">Expected Salary</string>
+    <string name="work_experience">Work Experience</string>
+    <string name="projects">Projects</string>
+    <string name="certifications">Certifications</string>
+    <string name="internships">Internships</string>
+    <string name="languages">Languages</string>
+    <string name="skills">Skills</string>
+    <string name="cv_resume">CV/Resume</string>
+    <string name="profile_details">Profile Details</string>
+    <string name="save">Save</string>
+    <string name="current_position">Current Position</string>
+    <string name="summary_max_500_characters">Summary (Max. 500 characters)</string>
+    <string name="job_title">Job Title</string>
+    <string name="company">Company</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="i_currently_work_here">I currently work here </string>
+    <string name="description_optional">Description(Optional)</string>
+    <string name="description">Description</string>
+    <string name="location">Location</string>
+    <string name="job_level">Job level</string>
+    <string name="job_function">Job Function</string>
+    <string name="university">University</string>
+    <string name="course">Course</string>
+    <string name="graduated">Graduated</string>
+    <string name="gpa">GPA</string>
+    <string name="total">Total</string>
+    <string name="project_name">Project Name</string>
+    <string name="language">Language</string>
+    <string name="proficiency">Proficiency</string>
+    <string name="role_">Role</string>
+    <string name="skill">Skill</string>
+    <string name="current">Current</string>
+    <string name="title">Title</string>
+    <string name="organization">Organization</string>
+    <string name="date_of_issue">Date of Issue</string>
+    <string name="expiration_date">Expiration Date</string>
+    <string name="this_credential_will_not_expire">This Credential will not expire</string>
+    <string name="credential_id_optional">Credential ID (Optional)</string>
+    <string name="credential_url_optional">Credential URL (Optional)</string>
+    <string name="project_url_optional">Project URL (Optional)</string>
+    <string name="role_optional">Role (Optional)</string>
+    <string name="upload_cv_resume">Upload CV/Resume</string>
+    <string name="browse_file">Browse File</string>
+    <string name="add_language">Add language +</string>
+    <string name="organization_website_link_optional">Organization Website link (Optional)</string>
+
+    <!-- Language List -->
+    <string-array name="languages_array">
+        <item>English (US)</item>
+        <item>English (UK)</item>
+        <item>French (France)</item>
+        <item>French (Canada)</item>
+        <item>Spanish (Spain)</item>
+        <item>Spanish (Mexico)</item>
+        <item>Arabic (Standard)</item>
+        <item>Arabic (Egypt)</item>
+        <item>Arabic (Morocco)</item>
+        <item>German (Germany)</item>
+        <item>Portuguese (Portugal)</item>
+        <item>Portuguese (Brazil)</item>
+        <item>Chinese (Simplified)</item>
+        <item>Chinese (Traditional)</item>
+        <item>Japanese</item>
+        <item>Korean</item>
+        <item>Italian</item>
+        <item>Russian</item>
+        <item>Hindi</item>
+        <item>Turkish</item>
+    </string-array>
+
+    <!-- Proficiency List -->
+    <string-array name="proficiencies_array">
+        <item>Beginner (A1)</item>
+        <item>Elementary (A2)</item>
+        <item>Intermediate (B1)</item>
+        <item>Upper Intermediate (B2)</item>
+        <item>Advanced (C1)</item>
+        <item>Proficient / Fluent (C2)</item>
+        <item>Native Speaker</item>
+    </string-array>
 </resources>

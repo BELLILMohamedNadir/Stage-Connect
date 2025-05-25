@@ -1,6 +1,5 @@
 package com.example.stageconnect.presentation.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,9 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,7 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,8 +40,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
-import com.example.stageconnect.data.model.Offer
+import com.example.stageconnect.data.dtos.OfferDto
+import com.example.stageconnect.presentation.viewmodels.OfferViewModel
 import com.example.stageconnect.ui.theme.BackgroundGray
 import com.example.stageconnect.ui.theme.BackgroundGray_
 import com.example.stageconnect.ui.theme.BlackFont
@@ -53,15 +53,47 @@ import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 
 @Composable
-fun CustomOfferCard(modifier: Modifier = Modifier,
-                    offer: Offer,
-                    isSaveIconDisable: Boolean = false,
-                    showLabel:Boolean = false,
-                    showDate: Boolean = false,
-                    onSavedClick: () -> Unit = {},
-                    onCardClick: (Offer) -> Unit = {}) {
-    var savedIcon by remember{ mutableIntStateOf(if (offer.isSaved) R.drawable.ic_save_filled else R.drawable.ic_save) }
-    Box(contentAlignment = Alignment.TopCenter){
+fun CustomOfferCard(
+    modifier: Modifier = Modifier,
+    offerDto: OfferDto,
+    isSaveIconDisable: Boolean = false,
+    showLabel: Boolean = false,
+    showDate: Boolean = false,
+    offerViewModel: OfferViewModel = hiltViewModel(),
+    onSavedClick: (OfferDto) -> Unit = {},
+    onCardClick: (OfferDto) -> Unit = {}
+) {
+
+    var savedIcon by remember {
+        mutableStateOf(
+            if (offerDto.isSaved) R.drawable.ic_save_filled else R.drawable.ic_save
+        )
+    }
+
+
+    val context = LocalContext.current
+    val isLoading = remember { mutableStateOf(false) }
+    val savedOfferMessage = stringResource(R.string.saved_offer)
+    val unSavedOfferMessage = stringResource(R.string.un_saved_offer)
+
+//    val saveOfferResult by offerViewModel.saveOfferResult.observeAsState()
+//
+//    ObserveResult(
+//        result = saveOfferResult,
+//        onLoading = { isLoading.value = true },
+//        onSuccess = {
+//            isLoading.value = false
+//            offerDto.isSaved = it!!.isSaved
+////            offerDto = it!!.copy()
+//        },
+//        onError = {
+//            isLoading.value = false
+//            ErrorMessage.Show(stringResource(R.string.error_occurred))
+//        }
+//    )
+
+
+    Box(contentAlignment = Alignment.TopCenter) {
         Card(
             modifier = modifier
                 .height(if (!showDate) 205.dp else 240.dp)
@@ -70,12 +102,12 @@ fun CustomOfferCard(modifier: Modifier = Modifier,
                 .background(color = Color.White)
                 .border(width = 1.dp, color = BackgroundGray_, shape = RoundedCornerShape(30.dp)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        ){
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable {
-                        onCardClick(offer)
+                        onCardClick(offerDto)
                     }
                     .background(color = Color.White)
                     .padding(vertical = 16.dp, horizontal = 12.dp),
@@ -103,96 +135,108 @@ fun CustomOfferCard(modifier: Modifier = Modifier,
                                 ),
                             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                             shape = RoundedCornerShape(10.dp)
-                        ){
-                            Box(modifier = Modifier
-                                .fillMaxSize()
-                                .background(color = Color.White), contentAlignment = Alignment.Center) {
-                                Image(painter = painterResource(offer.logo),
-                                    contentDescription = "company image",
-                                    modifier = Modifier
-                                        .height(19.dp)
-                                        .width(22.dp),
-                                    contentScale = ContentScale.Crop)
-                            }
+                        ) {
+                            ProfileImage(offerDto.logo, 45.dp, false)
                         }
 
                         Spacer(modifier = Modifier.width(10.dp))
                         //position and company
                         Column(
                         ) {
-                            Text(text = offer.position,
+                            Text(
+                                text = offerDto.position,
                                 fontFamily = LibreBaskerVilleBold,
                                 fontWeight = FontWeight.W600,
                                 fontSize = 16.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                color = Color.Black)
-                            Text(text = offer.company,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = offerDto.company ?: "",
                                 fontFamily = LibreBaskerVilleBold,
                                 fontWeight = FontWeight.W500,
                                 fontSize = 15.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                color = BlackFont)
+                                color = BlackFont
+                            )
                         }
                     }
                     IconButton(onClick = {
-                        if (!isSaveIconDisable){
-                            savedIcon = if (savedIcon == R.drawable.ic_save) {
-                                R.drawable.ic_save_filled
-                            }else{
-                                R.drawable.ic_save
+                        if (!isSaveIconDisable) {
+                            if (!isLoading.value) {
+                                offerViewModel.saveOffer(
+                                    offerDto,
+                                    savedOfferMessage,
+                                    unSavedOfferMessage,
+                                    context
+                                )
                             }
-                            onSavedClick()
-                        }else{
+                            savedIcon = if (offerDto.isSaved)
+                                R.drawable.ic_save_filled
+                            else
+                                R.drawable.ic_save
+                        } else {
                             savedIcon = R.drawable.ic_save_filled
                         }
+                        onSavedClick(offerDto)
                     }) {
-                        Icon(painter = painterResource(savedIcon),
+                        Icon(
+                            painter = painterResource(savedIcon),
                             contentDescription = "saved icon",
-                            tint = Color.Unspecified)
-                        onSavedClick()
+                            tint = Color.Unspecified
+                        )
+//                        onSavedClick(offerDto)
                     }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-                Spacer(modifier = Modifier
-                    .height(1.dp)
-                    .width(220.dp)
-                    .background(color = BackgroundGray_))
+                Spacer(
+                    modifier = Modifier
+                        .height(1.dp)
+                        .width(220.dp)
+                        .background(color = BackgroundGray_)
+                )
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Row {
                     Spacer(modifier = Modifier.width(55.dp))
                     //Place , salary and options
-                    Column(modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = offer.location,
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = offerDto.location,
                             fontFamily = LibreBaskerVilleBold,
                             fontWeight = FontWeight.W500,
                             fontSize = 14.sp,
                             color = BlackFont,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis)
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = offer.salary,
+                        Text(
+                            text = "${offerDto.salaryStart} - ${offerDto.salaryEnd} £",
                             fontFamily = LibreBaskerVilleBold,
                             fontWeight = FontWeight.W500,
                             fontSize = 12.sp,
                             color = Blue,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis)
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
                         LazyRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(offer.options){ option ->
+                            items(offerDto.options) { option ->
                                 CardOption(option = option)
                             }
                         }
                     }
                 }
-                if (showDate){
+                if (showDate) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -200,7 +244,7 @@ fun CustomOfferCard(modifier: Modifier = Modifier,
                         horizontalArrangement = Arrangement.End
                     ) {
                         Text(
-                            text = offer.postedDate,
+                            text = offerDto.postedDate ?: "",
                             fontWeight = FontWeight.W400,
                             fontSize = 12.sp,
                             fontFamily = LibreBaskerVilleBold,
@@ -212,7 +256,7 @@ fun CustomOfferCard(modifier: Modifier = Modifier,
             }
         }
 
-        if (showLabel && savedIcon == R.drawable.ic_save_filled){
+        if (showLabel && offerDto.isSaved) {
             Card(
                 modifier = modifier
                     .height(50.dp)
@@ -222,7 +266,7 @@ fun CustomOfferCard(modifier: Modifier = Modifier,
                     .background(color = BlueBackground)
                     .border(width = 1.dp, color = Blue, shape = RoundedCornerShape(15.dp)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            ){
+            ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -231,7 +275,8 @@ fun CustomOfferCard(modifier: Modifier = Modifier,
                         label = stringResource(R.string.job_saved),
                         labelSize = 14.sp,
                         isEnabled = false,
-                        isChecked = true)
+                        isChecked = true
+                    )
                 }
             }
         }
@@ -247,17 +292,24 @@ fun CardOption(modifier: Modifier = Modifier, option: String) {
             .background(color = Color.White)
             .border(width = 1.dp, color = BackgroundGray_, shape = RoundedCornerShape(10.dp)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ){
-        Box(modifier = Modifier.fillMaxSize().background(color = Color.White).padding(horizontal = 10.dp),
-            contentAlignment = Alignment.Center){
-            Text(text = option,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.White)
+                .padding(horizontal = 10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = option,
                 fontFamily = LibreBaskerVilleBold,
                 fontWeight = FontWeight.W400,
                 fontSize = 11.sp,
                 color = GrayFont,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center)
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
