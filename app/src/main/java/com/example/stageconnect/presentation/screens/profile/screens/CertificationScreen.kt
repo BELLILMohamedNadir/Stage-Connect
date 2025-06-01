@@ -30,7 +30,7 @@ import com.example.stageconnect.domain.DateComparator
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.components.CustomToggleSwitch
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.viewmodels.CertificationViewModel
 import com.example.stageconnect.ui.theme.GrayFont
@@ -41,12 +41,12 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                         onNext: () -> Unit
 ) {
     val inputFields = listOf(
-        stringResource(R.string.title),
-        stringResource(R.string.organization),
-        stringResource(R.string.date_of_issue),
-        stringResource(R.string.this_credential_will_not_expire),
-        stringResource(R.string.credential_id_optional),
-        stringResource(R.string.credential_url_optional)
+        R.string.title,
+        R.string.organization,
+        R.string.date_of_issue,
+        R.string.this_credential_will_not_expire,
+        R.string.credential_id_optional,
+        R.string.credential_url_optional
     )
     val title = rememberSaveable { mutableStateOf("") }
     val organization = rememberSaveable { mutableStateOf("") }
@@ -59,12 +59,12 @@ fun CertificationScreen(modifier: Modifier = Modifier,
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
     val stateMap = mapOf(
-        stringResource(R.string.title) to title,
-        stringResource(R.string.organization) to organization,
-        stringResource(R.string.date_of_issue) to dateOfIssue,
-        stringResource(R.string.expiration_date) to dateOfExpiration,
-        stringResource(R.string.credential_id_optional) to credentialId,
-        stringResource(R.string.credential_url_optional) to credentialUrl
+        R.string.title to title,
+        R.string.organization to organization,
+        R.string.date_of_issue to dateOfIssue,
+        R.string.expiration_date to dateOfExpiration,
+        R.string.credential_id_optional to credentialId,
+        R.string.credential_url_optional to credentialUrl
     )
 
     val createCertificationResult by certificationViewModel.createCertificationResult.observeAsState()
@@ -78,7 +78,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -93,7 +93,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                 inputFields.forEach { label ->
 
                     when (label) {
-                        stringResource(R.string.date_of_issue) -> {
+                        R.string.date_of_issue -> {
                             Row(modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -131,7 +131,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.this_credential_will_not_expire) -> {
+                        R.string.this_credential_will_not_expire -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -149,12 +149,13 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
+                                    resetText = stateMap[label]!!,
                                     onValueChange = { stateMap[label]?.value = it }
                                 )
                             }
@@ -184,7 +185,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
     }
     if (showErrorMessage){
         showErrorMessage = false
-        ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+        CustomMessage.Show(stringResource(R.string.add_necessary_data))
     }
 }
 fun isValid(certificationDto: CertificationDto): Boolean {

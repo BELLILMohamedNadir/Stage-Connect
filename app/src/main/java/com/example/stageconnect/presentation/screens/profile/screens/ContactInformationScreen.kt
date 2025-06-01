@@ -22,9 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.example.stageconnect.R
 import com.example.stageconnect.data.dtos.StudentDto
 import com.example.stageconnect.presentation.components.AppButton
-import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
 import com.example.stageconnect.presentation.components.CustomEditText
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
@@ -63,7 +62,7 @@ fun ContactInformationScreen(modifier: Modifier = Modifier,
             },
             onError = {
                 isLoading.value = false
-                ErrorMessage.Show(stringResource(R.string.error_occurred))
+                CustomMessage.Show(stringResource(R.string.error_occurred))
             }
         )
 
@@ -127,7 +126,7 @@ fun ContactInformationScreen(modifier: Modifier = Modifier,
         }
         if (showErrorMessage){
             showErrorMessage = false
-            ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+            CustomMessage.Show(stringResource(R.string.add_necessary_data))
         }
     } else {
         NotFound(showMessage = false)

@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -25,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,8 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stageconnect.R
 import com.example.stageconnect.domain.FileUtils
 import com.example.stageconnect.presentation.components.AppButton
-import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.components.CustomFileCard
@@ -65,13 +61,16 @@ fun CvResumeScreen(modifier: Modifier = Modifier,
     var fileUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
     val isLoading = rememberSaveable { mutableStateOf(false) }
+    var downloadResume by rememberSaveable { mutableStateOf(false) }
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
     val uploadFileResult by viewModel.uploadFileResult.observeAsState()
     val downloadFileResult by viewModel.downloadFileResult.observeAsState()
 
     LaunchedEffect(Unit) {
-        if (user?.resume != null && user.resume!!.isNotBlank())
+        if (user?.resume != null && user.resume!!.isNotBlank()){
+            downloadResume = true
             viewModel.downloadFile(user.resume!!)
+        }
     }
 
     ObserveResult(
@@ -84,7 +83,7 @@ fun CvResumeScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -105,6 +104,7 @@ fun CvResumeScreen(modifier: Modifier = Modifier,
                         )
 
                         withContext(Dispatchers.Main) {
+                            downloadResume = false
                             fileUri = uri
                         }
                     }
@@ -114,7 +114,7 @@ fun CvResumeScreen(modifier: Modifier = Modifier,
             }
         },
         onError = {
-            ErrorMessage.Show(stringResource(R.string.error_occurred_when_uploading_resume))
+            CustomMessage.Show(stringResource(R.string.error_occurred_when_uploading_resume))
         }
     )
 
@@ -177,6 +177,7 @@ fun CvResumeScreen(modifier: Modifier = Modifier,
                 //file
                 Spacer(modifier = Modifier.height(8.dp))
                 CustomFileCard(uri = fileUri, context = context,
+                    isLoading = downloadResume,
                     onDeleteClick = { fileUri  = null }) {
                     FileUtils.openPdf(context = context, uri = it)
                 }
@@ -193,7 +194,7 @@ fun CvResumeScreen(modifier: Modifier = Modifier,
     }
 
     if (showErrorMessage) {
-        ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+        CustomMessage.Show(stringResource(R.string.add_necessary_data))
         showErrorMessage = false
     }
 }

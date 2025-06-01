@@ -40,9 +40,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
-import com.example.stageconnect.data.dtos.MessageDto
 import com.example.stageconnect.presentation.components.CustomTopAppBar
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.messaging.components.CustomMessageCard
@@ -82,7 +81,7 @@ fun MessagingScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 

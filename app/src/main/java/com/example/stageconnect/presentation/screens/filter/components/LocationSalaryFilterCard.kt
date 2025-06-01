@@ -48,6 +48,7 @@ fun LocationSalaryFilterCard(
     criterion: String,
     resetSearchText: MutableState<String>,
     onLocationChange: (String) -> Unit,
+    onSalaryTypeChange: (String) -> Unit,
     salaryRange: ClosedFloatingPointRange<Float>,
     currentRange: ClosedFloatingPointRange<Float>,
     onSalaryChange: (ClosedFloatingPointRange<Float>) -> Unit,
@@ -124,7 +125,7 @@ fun LocationSalaryFilterCard(
                 defaultText = stringResource(R.string.per_month),
                 list = listOf(stringResource(R.string.per_month),stringResource(R.string.per_year)),
                 onValueChange = {
-                    onLocationChange(it)
+                    onSalaryTypeChange(it)
                 })
         }
     }

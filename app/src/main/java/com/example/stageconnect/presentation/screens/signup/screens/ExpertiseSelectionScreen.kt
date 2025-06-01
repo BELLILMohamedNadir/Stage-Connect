@@ -93,7 +93,7 @@ fun ExpertiseSelectionScreen(
         AppButton(
             text = stringResource(R.string.continue_)
         ) {
-            if (selectedExpertise.isNotEmpty()){
+            if (selectedExpertise.isNotEmpty() && selectedExpertise.size >= 3){
                 registerViewModel.setExpertises(selectedExpertise)
                 onNext()
             }else{

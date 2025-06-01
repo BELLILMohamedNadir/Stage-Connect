@@ -24,18 +24,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.stageconnect.R
 import com.example.stageconnect.data.remote.repository.StorageRepository
+import com.example.stageconnect.domain.CONSTANT
 import com.example.stageconnect.domain.CONSTANT.USER_ROLE
 import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.presentation.components.StudentBottomNavigationBar
 import com.example.stageconnect.presentation.components.CustomTopAppBar
+import com.example.stageconnect.presentation.components.EstablishmentBottomNavigationBar
 import com.example.stageconnect.presentation.components.RecruiterBottomNavigationBar
 import com.example.stageconnect.presentation.screens.applications.screens.RecruiterApplicationsScreen
 import com.example.stageconnect.presentation.screens.applications.screens.StudentApplicationsScreen
 import com.example.stageconnect.presentation.screens.applications.viewmodels.ApplicationViewModel
+import com.example.stageconnect.presentation.screens.applicationstatus.screens.EstablishmentApplicationStatus
 import com.example.stageconnect.presentation.screens.applicationstatus.screens.RecruiterApplicationStatus
 import com.example.stageconnect.presentation.screens.applicationstatus.screens.StudentApplicationStatus
 import com.example.stageconnect.presentation.screens.appstart.AppStartScreen
+import com.example.stageconnect.presentation.screens.establishmentstudent.screen.EstablishmentStudentScreen
 import com.example.stageconnect.presentation.screens.filter.screens.FilterScreen
+import com.example.stageconnect.presentation.screens.filter.viewmodel.FilterViewModel
+import com.example.stageconnect.presentation.screens.home.screens.EstablishmentHomeScreen
 import com.example.stageconnect.presentation.screens.home.screens.RecruiterHomeScreen
 import com.example.stageconnect.presentation.screens.home.screens.StudentHomeScreen
 import com.example.stageconnect.presentation.screens.messaging.screens.MessagingScreen
@@ -82,11 +88,12 @@ fun AppNavHost(modifier: Modifier = Modifier,
     val offerViewModel: OfferViewModel = hiltViewModel()
     val registerViewModel: RegisterViewModel = hiltViewModel()
     val roomViewModel: RoomViewModel = hiltViewModel()
+    val filterViewModel: FilterViewModel = hiltViewModel()
 
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = Screen.SignIn.route
+        startDestination = if (storageRepository.getBoolean(CONSTANT.ONBOARDING)) Screen.SignIn.route else Screen.AppStart.route
     ) {
 
         composable(
@@ -154,6 +161,11 @@ fun AppNavHost(modifier: Modifier = Modifier,
                             popUpTo(Screen.SignIn.route) { inclusive = true }
                         }
                     },
+                    onEstablishmentSignIn = {
+                        navController.navigate(Screen.EstablishmentHome.route) {
+                            popUpTo(Screen.SignIn.route) { inclusive = true }
+                        }
+                    },
                     onSignUpWithGoogle = {})
             }
         }
@@ -170,8 +182,11 @@ fun AppNavHost(modifier: Modifier = Modifier,
                 ProfileSelectionScreen(
                     modifier = Modifier.padding(innerPadding),
                     registerViewModel = registerViewModel,
-                    onNext = {
+                    onExpertiseScreenNavigate = {
                         navController.navigate(Screen.ExpertiseSelection.route)
+                    },
+                    onUserInformationScreenNavigate = {
+                        navController.navigate(Screen.UserInformation.route)
                     }
                 )
             }
@@ -228,12 +243,13 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     onFilterClick = {
                         navController.navigate(Screen.Filter.route)
                     },
+                    onSeeAll = {
+                        navController.navigate(Screen.Search.route)
+                    },
                     onOfferCardClick = {
                         navController.navigate(Screen.JobDetails.route)
                     }) {
-                    navController.navigate(Screen.Search.route) {
-                        popUpTo(Screen.StudentHome.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Search.route)
                 }
             }
         }
@@ -262,26 +278,53 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     onFilterClick = {
                         navController.navigate(Screen.Filter.route)
                     },
+                    onSeeAll = {navController.navigate(Screen.Search.route)},
                     onOfferCardClick = {
                         navController.navigate(Screen.AddOffer.route)
                     }) {
-                    navController.navigate(Screen.Search.route) {
-                        popUpTo(Screen.RecruiterHome.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Search.route)
                 }
             }
         }
 
-        composable(route = Screen.Search.route) {
-            SearchScreen(
-                jobDetailsViewModel = jobDetailsViewModel,
-                onFilterClick = {
-                    navController.navigate(Screen.Filter.route)
+        composable(route = Screen.EstablishmentStudents.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.students)
+                    )
                 },
-                onOfferCardClick = {
-                    navController.navigate(Screen.JobDetails.route)
-                }) {
-                navController.popBackStack()
+                bottomBar = { EstablishmentBottomNavigationBar(navController = navController) }
+            ) { innerPadding ->
+                EstablishmentStudentScreen (
+                    modifier = Modifier.padding(innerPadding),
+                    profileViewModel = profileViewModel,
+                    onFilterClick = {
+                        navController.navigate(Screen.Filter.route)
+                    }) {
+                }
+            }
+        }
+
+
+        composable(route = Screen.Search.route) {
+            Scaffold(
+            ) {innerPadding ->
+                SearchScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    jobDetailsViewModel = jobDetailsViewModel,
+                    onFilterClick = {
+                        navController.navigate(Screen.Filter.route)
+                    },
+                    filterViewModel = filterViewModel,
+                    profileViewModel = profileViewModel,
+                    onOfferCardClick = {
+                        navController.navigate(Screen.JobDetails.route)
+                    }) {
+                    navController.popBackStack()
+                }
             }
         }
 
@@ -295,7 +338,10 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     )
                 },
             ) { innerPadding ->
-                FilterScreen(modifier = Modifier.padding(innerPadding))
+                FilterScreen(modifier = Modifier.padding(innerPadding),
+                    filterViewModel = filterViewModel){
+                    navController.popBackStack()
+                }
             }
         }
 
@@ -303,14 +349,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
             Scaffold(
                 topBar = {
                     CustomTopAppBar(
-                        onDismiss = { navController.popBackStack() },
+                        onDismiss = {
+                            jobDetailsViewModel.setSource("")
+                            navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back
                     )
                 },
             ) { innerPadding ->
                 JobDetailsScreen(
                     modifier = Modifier.padding(innerPadding),
-                    jobDetailsViewModel = jobDetailsViewModel
+                    jobDetailsViewModel = jobDetailsViewModel,
+                    profileViewModel = profileViewModel
                 ) { selectedOffer ->
                     offerViewModel.selectOffer(selectedOffer)
                     navController.navigate(Screen.OfferApply.route)
@@ -355,7 +404,9 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     jobDetailsViewModel = jobDetailsViewModel,
                     onFilterClick = {
                         navController.navigate(Screen.Filter.route)
-                    }, onOfferCardClick = {
+                    },
+                    filterViewModel = filterViewModel,
+                    onOfferCardClick = {
                         navController.navigate(Screen.JobDetails.route)
                     },
                 ) {
@@ -411,6 +462,24 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     },
                     onNavigate = {
                         navController.navigate(Screen.RecruiterApplicationStatus.route)
+                    }
+                )
+            }
+        }
+
+        composable(route = Screen.EstablishmentHome.route) {
+            Scaffold(
+                bottomBar = { EstablishmentBottomNavigationBar(navController = navController) }
+            ) { innerPadding ->
+                EstablishmentHomeScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    applicationViewModel = applicationViewModel,
+                    onFilterClick = {
+                        navController.navigate(Screen.Filter.route)
+                    },
+                    profileViewModel = profileViewModel,
+                    onNavigate = {
+                        navController.navigate(Screen.EstablishmentApplicationStatus.route)
                     }
                 )
             }
@@ -478,7 +547,8 @@ fun AppNavHost(modifier: Modifier = Modifier,
             ) { innerPadding ->
                 StudentApplicationStatus(
                     modifier = Modifier.padding(innerPadding),
-                    applicationViewModel = applicationViewModel
+                    applicationViewModel = applicationViewModel,
+                    profileViewModel = profileViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -500,7 +570,46 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     applicationViewModel = applicationViewModel,
                     profileViewModel = profileViewModel,
                     onMessageNavigation = {
-                        navController.navigate(Screen.Room.route)
+                        roomViewModel.setRoom(it)
+                        navController.navigate(Screen.Messaging.route)
+                    },
+                    onNavigate = {
+                        navController.navigate(Screen.OrganizationInfo.route)
+                    }
+                ) {
+                    navController.popBackStack()
+                }
+            }
+        }
+
+        composable(route = Screen.EstablishmentApplicationStatus.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.application_status)
+                    )
+                }
+            ) { innerPadding ->
+                EstablishmentApplicationStatus(
+                    modifier = Modifier.padding(innerPadding),
+                    applicationViewModel = applicationViewModel,
+                    profileViewModel = profileViewModel,
+                    onMessageNavigation = {
+                        roomViewModel.setRoom(it)
+                        navController.navigate(Screen.Messaging.route)
+                    },
+                    onOfferDetailsClick = {
+                        jobDetailsViewModel.setOffer(it)
+                        jobDetailsViewModel.setSource(Screen.EstablishmentApplicationStatus.route)
+                        navController.navigate(Screen.JobDetails.route)
+                    },
+                    onCompanyDetailsClick = {
+                        navController.navigate(Screen.OrganizationInfo.route)
+                    },
+                    onNavigate = {
+                        navController.navigate(Screen.OrganizationInfo.route)
                     }
                 ) {
                     navController.popBackStack()
@@ -531,7 +640,9 @@ fun AppNavHost(modifier: Modifier = Modifier,
             Scaffold(
                 topBar = {
                     CustomTopAppBar(
-                        onDismiss = {},
+                        onDismiss = {
+                            navController.popBackStack()
+                        },
                         title = stringResource(R.string.profile)
                     )
                 },
@@ -758,7 +869,9 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     )
                 },
                 bottomBar = {
-                    getBottomBar(storageRepository.get(USER_ROLE)!!, navController)?.invoke()
+                    if (!profileViewModel.showRecruiterData.value!!){
+                        getBottomBar(storageRepository.get(USER_ROLE)!!, navController)?.invoke()
+                    }
                 }
             ) { innerPadding ->
                 OrganizationInfoScreen(modifier = Modifier.padding(innerPadding),
@@ -772,5 +885,6 @@ fun AppNavHost(modifier: Modifier = Modifier,
 fun getBottomBar(role: String, navController: NavController): (@Composable () -> Unit)? = when (role) {
     ROLE.STUDENT.name -> { { StudentBottomNavigationBar(navController = navController) } }
     ROLE.RECRUITER.name -> { { RecruiterBottomNavigationBar(navController = navController) } }
+    ROLE.ESTABLISHMENT.name ->  { { EstablishmentBottomNavigationBar(navController = navController) }}
     else -> null
 }

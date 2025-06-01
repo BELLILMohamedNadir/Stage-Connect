@@ -2,7 +2,6 @@ package com.example.stageconnect.presentation.screens.profile.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,9 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -25,22 +22,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.example.stageconnect.R
 import com.example.stageconnect.data.dtos.StudentDto
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomEditText
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.components.ProfileImage
@@ -84,7 +77,7 @@ fun ProfileDetailsScreen(modifier: Modifier = Modifier,
             },
             onError = {
                 isLoading.value = false
-                ErrorMessage.Show(stringResource(R.string.error_occurred))
+                CustomMessage.Show(stringResource(R.string.error_occurred))
             }
         )
 
@@ -200,7 +193,7 @@ fun ProfileDetailsScreen(modifier: Modifier = Modifier,
         }
         if (showErrorMessage){
             showErrorMessage = false
-            ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+            CustomMessage.Show(stringResource(R.string.add_necessary_data))
         }
     }else{
         NotFound(showMessage = false)

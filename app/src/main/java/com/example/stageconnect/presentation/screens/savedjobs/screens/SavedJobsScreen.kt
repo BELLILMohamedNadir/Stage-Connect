@@ -1,6 +1,5 @@
 package com.example.stageconnect.presentation.screens.savedjobs.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,9 +28,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
 import com.example.stageconnect.presentation.components.CustomOfferCard
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
+import com.example.stageconnect.presentation.components.NoDataFound
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
+import com.example.stageconnect.presentation.screens.filter.viewmodel.FilterViewModel
 import com.example.stageconnect.presentation.screens.offer.viewmodel.JobDetailsViewModel
 import com.example.stageconnect.presentation.screens.savedjobs.components.CustomDialog
 import com.example.stageconnect.presentation.screens.search.components.CustomSearchBar
@@ -40,15 +41,16 @@ import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 
 @Composable
 fun SavedJobsScreen(modifier: Modifier = Modifier,
-                    filterViewModel: OfferViewModel = hiltViewModel(),
                     offerViewModel: OfferViewModel = hiltViewModel(),
                     jobDetailsViewModel: JobDetailsViewModel,
+                    filterViewModel: FilterViewModel,
                     onFilterClick: () -> Unit,
                     onOfferCardClick: () -> Unit,
                     onDismiss: () -> Unit
 ) {
 
-    val filteredItems by filterViewModel.filteredOffers.observeAsState(initial = emptyList())
+    val filteredItems by offerViewModel.filteredOffers.observeAsState(initial = emptyList())
+    val offers = offerViewModel.offers.observeAsState(initial = emptyList())
     var searchedText by remember { mutableStateOf("") }
     val isLoading = remember { mutableStateOf(false) }
     val isButtonLoading = remember { mutableStateOf(false) }
@@ -72,7 +74,6 @@ fun SavedJobsScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -86,7 +87,7 @@ fun SavedJobsScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isButtonLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -99,69 +100,73 @@ fun SavedJobsScreen(modifier: Modifier = Modifier,
                 verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Spacer(modifier = Modifier.height(5.dp))
-                    CustomSearchBar (onFilterClick = {onFilterClick() }){
+                    CustomSearchBar (onFilterClick = {onFilterClick() }, onValueChange = {
                         searchedText = it
-                        filterViewModel.applyFilter(searchedText)
+                        offerViewModel.applyFilter(searchedText, filterViewModel.criteria.value)
+                    }){
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            //Body
-            if (filteredItems.isNotEmpty()){
-                // founded elements
-                if (searchedText.isNotEmpty()){
-                    Column (
-                        modifier = Modifier.fillMaxWidth().padding(start = 50.dp),
-                        horizontalAlignment = Alignment.Start,
-                    ){
-                        if (filteredItems.isNotEmpty()){
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(text = "${filteredItems.size} ${stringResource(R.string.found)}",
-                                fontFamily = LibreBaskerVilleBold,
-                                fontWeight = FontWeight.W600,
-                                fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-                }
-                //offers list
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ){
-                        items(filteredItems.size){ index ->
-                            filteredItems[index].isSaved = true
-                            CustomOfferCard(
-                                offerDto = filteredItems[index],
-                                isSaveIconDisable = true,
-                                onSavedClick = {offer ->
-                                jobDetailsViewModel.setOffer(offer)
-                                showDialog = true
-                            }
-                            ){ offer ->
-                                jobDetailsViewModel.setOffer(offer)
-                                onOfferCardClick()
-                            }
-                        }
-                    }
-                    if (showDialog){
-                        CustomDialog(
-                            label = stringResource(R.string.remove_from_saved),
-                            offer = jobDetailsViewModel.offer.value!!,
-                            isLoading = isButtonLoading,
-                            onDismiss = {showDialog = false}
-                        ) { offer ->
-                            offerViewModel.saveOffer(offerDto = offer, unSavedOfferMessage = unSavedMessage, context = context)
-                        }
-                    }
-                }
+            if (offers.value?.isEmpty()!!){
+                NotFound(showMessage = false)
             }else{
-                NotFound()
+                Spacer(modifier = Modifier.height(16.dp))
+                //Body
+                if (filteredItems.isNotEmpty()){
+                    // founded elements
+                    if (searchedText.isNotEmpty()){
+                        Column (
+                            modifier = Modifier.fillMaxWidth().padding(start = 50.dp),
+                            horizontalAlignment = Alignment.Start,
+                        ){
+                            if (filteredItems.isNotEmpty()){
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(text = "${filteredItems.size} ${stringResource(R.string.found)}",
+                                    fontFamily = LibreBaskerVilleBold,
+                                    fontWeight = FontWeight.W600,
+                                    fontSize = 16.sp)
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+                    }
+                    //offers list
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ){
+                            items(filteredItems.size){ index ->
+                                filteredItems[index].isSaved = true
+                                CustomOfferCard(
+                                    offerDto = filteredItems[index],
+                                    isSaveIconDisable = true,
+                                    onSavedClick = {offer ->
+                                        jobDetailsViewModel.setOffer(offer)
+                                        showDialog = true
+                                    }
+                                ){ offer ->
+                                    jobDetailsViewModel.setOffer(offer)
+                                    onOfferCardClick()
+                                }
+                            }
+                        }
+                        if (showDialog){
+                            CustomDialog(
+                                label = stringResource(R.string.remove_from_saved),
+                                offer = jobDetailsViewModel.offer.value!!,
+                                isLoading = isButtonLoading,
+                                onDismiss = {showDialog = false}
+                            ) { offer ->
+                                offerViewModel.saveOffer(offerDto = offer, unSavedOfferMessage = unSavedMessage, context = context)
+                            }
+                        }
+                    }
+                }else{
+                    NoDataFound()
+                }
             }
         }
     }else{

@@ -32,7 +32,7 @@ import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.components.CustomTextArea
 import com.example.stageconnect.presentation.components.CustomToggleSwitch
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.viewmodels.EducationViewModel
 import com.example.stageconnect.ui.theme.GrayFont
@@ -44,13 +44,13 @@ fun EducationScreen(modifier: Modifier = Modifier,
 ) {
 
     val inputFields = listOf(
-        stringResource(R.string.education_) to Education.entries.map { it.label },
-        stringResource(R.string.course) to emptyList(),
-        stringResource(R.string.university) to emptyList(),
-        stringResource(R.string.from) to emptyList(),
-        stringResource(R.string.graduated) to emptyList(),
-        stringResource(R.string.gpa) to emptyList(),
-        stringResource(R.string.description_optional) to emptyList(),
+        R.string.education_ to Education.entries.map { it.label },
+        R.string.course to emptyList(),
+        R.string.university to emptyList(),
+        R.string.from to emptyList(),
+        R.string.graduated to emptyList(),
+        R.string.gpa to emptyList(),
+        R.string.description_optional to emptyList(),
     )
 
     val education = rememberSaveable { mutableStateOf("") }
@@ -66,8 +66,8 @@ fun EducationScreen(modifier: Modifier = Modifier,
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
     val stateMap = mapOf(
-        stringResource(R.string.course) to course,
-        stringResource(R.string.university) to university,
+        R.string.course to course,
+        R.string.university to university,
     )
 
     val createEducationResult by educationViewModel.createEducationResult.observeAsState()
@@ -81,7 +81,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -95,7 +95,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                 inputFields.forEach { (label, list) ->
 
                     when (label) {
-                        stringResource(R.string.description_optional) -> {
+                        R.string.description_optional -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -111,16 +111,16 @@ fun EducationScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.education_) ->{
+                        R.string.education_ ->{
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     list = list,
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { education.value = it }
@@ -128,7 +128,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.from) -> {
+                        R.string.from -> {
                             Row(modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -166,7 +166,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.gpa) -> {
+                        R.string.gpa -> {
                             Row(modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -207,7 +207,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.graduated) -> {
+                        R.string.graduated -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -224,11 +224,11 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
                                 )
@@ -261,7 +261,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
     }
     if (showErrorMessage){
         showErrorMessage = false
-        ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+        CustomMessage.Show(stringResource(R.string.add_necessary_data))
     }
 }
 fun isValid(educationDto: EducationDto): Boolean {

@@ -41,7 +41,7 @@ class OfferViewModel @Inject constructor(
     private val _offers = MutableLiveData<MutableList<OfferDto>>()
     val offers: LiveData<MutableList<OfferDto>> get() = _offers
 
-    private val _filteredOffers = MutableLiveData<List<OfferDto>>()
+    private val _filteredOffers = MutableLiveData<List<OfferDto>>(emptyList())
     val filteredOffers: LiveData<List<OfferDto>> get() = _filteredOffers
 
     private val _getAllOfferResult = MutableLiveData<Result<List<OfferDto>>?>()
@@ -75,6 +75,7 @@ class OfferViewModel @Inject constructor(
             try {
                 val result = getAllOffersUseCase.execute(studentId)
                 _offers.value = result.toMutableList()
+                _filteredOffers.value = _offers.value!!.shuffled()
                 _getAllOfferResult.postValue(Result.Success(result))
 //                clearDate()
             } catch (e: Exception) {
@@ -91,6 +92,7 @@ class OfferViewModel @Inject constructor(
             try {
                 val result = getAllRecruiterOffersUseCase.execute(recruiterId)
                 _offers.value = result.toMutableList()
+                _filteredOffers.value = _offers.value
                 _getAllRecruiterOfferResult.postValue(Result.Success(result))
 //                clearDate()
             } catch (e: Exception) {
@@ -116,11 +118,20 @@ class OfferViewModel @Inject constructor(
         }
     }
 
-    fun applyFilter(searchedText: String) {
+    fun applyFilter(searchedText: String, selectedFilters: Map<String, List<String>>) {
         if (searchedText.isEmpty()) {
             _filteredOffers.value = _offers.value
         } else {
-            val filtered = filterUseCase.filterOffers(_offers.value ?: emptyList(), searchedText)
+            val filtered = filterUseCase.filterOffers(_offers.value ?: emptyList(), searchedText, selectedFilters)
+            _filteredOffers.value = filtered
+        }
+    }
+
+    fun applyFilter(filter: String) {
+        if (filter.isEmpty() || filter == "All") {
+            _filteredOffers.value = _offers.value
+        } else {
+            val filtered = filterUseCase.filterOffers(_offers.value ?: emptyList(), filter)
             _filteredOffers.value = filtered
         }
     }
@@ -191,6 +202,7 @@ class OfferViewModel @Inject constructor(
                 _offers.value = _offers.value?.map { offer ->
                     if (offer.id == updatedOffer.id) updatedOffer else offer
                 }?.toMutableList()
+                _filteredOffers.value = _offers.value
                 //                clearDate()
             } catch (e: Exception) {
                 _updateOfferResult.postValue(Result.Error(e))

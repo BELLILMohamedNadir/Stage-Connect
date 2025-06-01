@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.search.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -29,25 +31,69 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
+import com.example.stageconnect.domain.model.enums.ROLE
+import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.CustomOfferCard
+import com.example.stageconnect.presentation.components.NoDataFound
 import com.example.stageconnect.presentation.components.NotFound
+import com.example.stageconnect.presentation.components.ObserveResult
+import com.example.stageconnect.presentation.screens.filter.viewmodel.FilterViewModel
 import com.example.stageconnect.presentation.screens.offer.viewmodel.JobDetailsViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.presentation.screens.search.components.CustomSearchBar
 import com.example.stageconnect.presentation.viewmodels.OfferViewModel
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 
 @Composable
 fun SearchScreen(modifier: Modifier = Modifier,
-                 filterViewModel: OfferViewModel = hiltViewModel(),
+                 offerViewModel: OfferViewModel = hiltViewModel(),
+                 filterViewModel: FilterViewModel,
                  jobDetailsViewModel: JobDetailsViewModel,
+                 profileViewModel: ProfileViewModel,
                  onFilterClick: () -> Unit,
                  onOfferCardClick: () -> Unit,
                  onDismiss: () -> Unit
                  ) {
 
-    val filteredItems by filterViewModel.filteredOffers.observeAsState(initial = emptyList())
+    val filteredItems by offerViewModel.filteredOffers.observeAsState(initial = emptyList())
+    val offers by offerViewModel.offers.observeAsState(initial = emptyList())
     var searchedText by remember { mutableStateOf("") }
+    val isLoading = remember { mutableStateOf(false) }
+    val getAllOfferResult by offerViewModel.getAllOfferResult.observeAsState()
+    val getAllRecruiterOfferResult by offerViewModel.getAllRecruiterOfferResult.observeAsState()
+    val user = profileViewModel.user
 
+    LaunchedEffect(Unit) {
+       if (user.value?.role == ROLE.STUDENT)
+           offerViewModel.getAllOffer()
+       else
+           offerViewModel.getAllRecruiterOffer()
+    }
+
+    ObserveResult(
+        result = getAllOfferResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    ObserveResult(
+        result = getAllRecruiterOfferResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
 
     Column(modifier = modifier.fillMaxSize().background(Color.White)) {
         //Header
@@ -62,52 +108,60 @@ fun SearchScreen(modifier: Modifier = Modifier,
             }
             Column {
                 Spacer(modifier = Modifier.height(5.dp))
-                CustomSearchBar (onFilterClick = {onFilterClick() }){
+                CustomSearchBar (onFilterClick = {onFilterClick() }, onValueChange = {
                     searchedText = it
-                    filterViewModel.applyFilter(searchedText)
+                    offerViewModel.applyFilter(searchedText, filterViewModel.criteria.value)
+                }){
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         //Body
-        if (filteredItems.isNotEmpty()){
-            // founded elements
-            if (searchedText.isNotEmpty()){
-                Column (
-                    modifier = Modifier.fillMaxWidth().padding(start = 50.dp),
-                    horizontalAlignment = Alignment.Start,
-                ){
-                    if (filteredItems.isNotEmpty()){
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(text = "${filteredItems.size} ${stringResource(R.string.found)}",
-                            fontFamily = LibreBaskerVilleBold,
-                            fontWeight = FontWeight.W600,
-                            fontSize = 16.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-            }
-            //offers list
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ){
-                    items(filteredItems.size){ index ->
-                        CustomOfferCard(offerDto = filteredItems[index]){ offer ->
-                            jobDetailsViewModel.setOffer(offer)
-                            onOfferCardClick()
+        if(!isLoading.value){
+            if (offers.isEmpty()){
+                NotFound(showMessage = false)
+            }else{
+                if (filteredItems.isNotEmpty()){
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // founded elements
+                    if (searchedText.isNotEmpty()){
+                        Column (
+                            modifier = Modifier.fillMaxWidth().padding(start = 50.dp),
+                            horizontalAlignment = Alignment.Start,
+                        ){
+                            if (filteredItems.isNotEmpty()){
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(text = "${filteredItems.size} ${stringResource(R.string.found)}",
+                                    fontFamily = LibreBaskerVilleBold,
+                                    fontWeight = FontWeight.W600,
+                                    fontSize = 16.sp)
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
                         }
                     }
+                    //offers list
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ){
+                            items(filteredItems.size){ index ->
+                                CustomOfferCard(offerDto = filteredItems[index]){ offer ->
+                                    jobDetailsViewModel.setOffer(offer)
+                                    onOfferCardClick()
+                                }
+                            }
+                        }
+                    }
+                }else{
+                    NoDataFound()
                 }
             }
         }else{
-            NotFound()
+            CustomCircularProgressIndicator {  }
         }
     }
 }

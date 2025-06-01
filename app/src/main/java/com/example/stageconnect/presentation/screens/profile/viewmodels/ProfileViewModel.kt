@@ -9,15 +9,18 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stageconnect.data.dtos.AuthenticationResponse
+import com.example.stageconnect.data.dtos.EstablishmentDto
 import com.example.stageconnect.data.dtos.RecruiterDto
 import com.example.stageconnect.data.dtos.StudentDto
 import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.data.remote.repository.StorageRepository
 import com.example.stageconnect.domain.CONSTANT.USER_ID
+import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.domain.result.Result
 import com.example.stageconnect.domain.usecases.DownloadFileUseCase
 import com.example.stageconnect.domain.usecases.UploadFileUseCase
 import com.example.stageconnect.domain.usecases.create.AddSkillsUseCase
+import com.example.stageconnect.domain.usecases.update.UpdateEstablishmentUseCase
 import com.example.stageconnect.domain.usecases.update.UpdateRecruiterUseCase
 import com.example.stageconnect.domain.usecases.update.UpdateStudentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +34,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val updateStudentUseCase: UpdateStudentUseCase,
     private val updateRecruiterUseCase: UpdateRecruiterUseCase,
+    private val updateEstablishmentUseCase: UpdateEstablishmentUseCase,
     private val addSkillsUseCase: AddSkillsUseCase,
     private val uploadFileUseCase: UploadFileUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
@@ -51,6 +55,9 @@ class ProfileViewModel @Inject constructor(
     private val _updateRecruiterResult = MutableLiveData<Result<RecruiterDto>?>()
     val updateRecruiterResult: LiveData<Result<RecruiterDto>?> get() = _updateRecruiterResult
 
+    private val _updateEstablishmentResult = MutableLiveData<Result<EstablishmentDto>?>()
+    val updateEstablishmentResult: LiveData<Result<EstablishmentDto>?> get() = _updateEstablishmentResult
+
     private val _addSkillsResult = MutableLiveData<Result<List<String>>?>()
     val addSkillsResult: LiveData<Result<List<String>>?> get() = _addSkillsResult
 
@@ -60,6 +67,20 @@ class ProfileViewModel @Inject constructor(
     private val _downloadFileResult = MutableLiveData<Result<Response<ResponseBody>>?>()
     val downloadFileResult: LiveData<Result<Response<ResponseBody>>?> get() = _downloadFileResult
 
+    private val _showRecruiterData = MutableLiveData<Boolean>(false)
+    val showRecruiterData: LiveData<Boolean> get() = _showRecruiterData
+
+    private val _recruiterDto = MutableLiveData<RecruiterDto>()
+    val recruiterDto: LiveData<RecruiterDto> get() = _recruiterDto
+
+
+    fun setShowRecruiterData(show: Boolean){
+        _showRecruiterData.value = show
+    }
+
+    fun setRecruiterDto(recruiterDto: RecruiterDto){
+        _recruiterDto.value = recruiterDto
+    }
 
     fun setStudent(response: AuthenticationResponse){
         _user.value = UserDto(
@@ -69,8 +90,10 @@ class ProfileViewModel @Inject constructor(
             email = response.email,
             phone = response.phone,
             photo = response.photo,
+            role = ROLE.STUDENT,
             resume = response.resume,
             gender = response.gender,
+            summary = response.summary,
             address = response.address,
             currentPosition = response.currentPosition,
         )
@@ -84,7 +107,27 @@ class ProfileViewModel @Inject constructor(
             email = response.email,
             phone = response.phone,
             photo = response.photo,
+            role = ROLE.RECRUITER,
             gender = response.gender,
+            summary = response.summary,
+            organizationName = response.organizationName,
+            address = response.address,
+            currentPosition = response.currentPosition,
+        )
+    }
+
+    fun setEstablishment(response: AuthenticationResponse){
+        _user.value = UserDto(
+            name = response.name,
+            firstName = response.firstName,
+            dateOfBirth = response.dateOfBirth,
+            email = response.email,
+            phone = response.phone,
+            photo = response.photo,
+            role = ROLE.ESTABLISHMENT,
+            gender = response.gender,
+            summary = response.summary,
+            organizationName = response.organizationName,
             address = response.address,
             currentPosition = response.currentPosition,
         )
@@ -115,6 +158,7 @@ class ProfileViewModel @Inject constructor(
                     photo = response.photo,
                     resume = response.resume,
                     gender = response.gender,
+                    summary = response.summary,
                     address = response.address,
                     currentPosition = response.currentPosition,
                 )
@@ -134,16 +178,44 @@ class ProfileViewModel @Inject constructor(
                 _updateRecruiterResult.postValue(Result.Success(response))
                 _user.value = UserDto(
                     name = response.name,
+                    firstName = response.firstName,
                     dateOfBirth = response.dateOfBirth,
                     email = response.email,
                     phone = response.phone,
                     photo = response.photo,
                     address = response.address,
+                    summary = response.summary,
                     currentPosition = response.currentPosition,
                     organizationName = response.organizationName,
                 )
             } catch (e: Exception) {
                 _updateRecruiterResult.postValue(Result.Error(e))
+            }
+        }
+    }
+
+    fun updateEstablishment(request: EstablishmentDto, fileUri: Uri? = null){
+        request.id = storageRepository.get(label = USER_ID)!!.toLong()
+        viewModelScope.launch {
+            _updateEstablishmentResult.postValue(Result.Loading())
+            delay(100)
+            try {
+                val response = updateEstablishmentUseCase.execute(request = request, fileUri = fileUri)
+                _updateEstablishmentResult.postValue(Result.Success(response))
+                _user.value = UserDto(
+                    name = response.name,
+                    firstName = response.firstName,
+                    dateOfBirth = response.dateOfBirth,
+                    email = response.email,
+                    phone = response.phone,
+                    photo = response.photo,
+                    address = response.address,
+                    summary = response.summary,
+                    currentPosition = response.currentPosition,
+                    organizationName = response.organizationName,
+                )
+            } catch (e: Exception) {
+                _updateEstablishmentResult.postValue(Result.Error(e))
             }
         }
     }
@@ -193,6 +265,7 @@ class ProfileViewModel @Inject constructor(
     fun clearData() {
         _updateStudentResult.value = null
         _updateRecruiterResult.value = null
+        _updateEstablishmentResult.value = null
         _downloadFileResult.value = null
         _uploadFileResult.value = null
         _addSkillsResult.value = null

@@ -26,7 +26,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 
 @Composable
-fun NotFound(modifier: Modifier = Modifier, showMessage: Boolean = true) {
+fun NotFound(modifier: Modifier = Modifier, showMessage: Boolean = false) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,

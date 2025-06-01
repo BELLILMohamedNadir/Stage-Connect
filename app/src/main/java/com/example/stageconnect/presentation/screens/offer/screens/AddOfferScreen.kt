@@ -1,6 +1,5 @@
 package com.example.stageconnect.presentation.screens.offer.screens
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +17,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableLongStateOf
@@ -41,8 +39,9 @@ import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.domain.model.SearchCriterion
 import com.example.stageconnect.domain.model.enums.SearchCriteria
 import com.example.stageconnect.presentation.components.AppButton
+import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.components.CustomTextArea
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.filter.components.CustomFilterCard
 import com.example.stageconnect.presentation.screens.filter.components.CustomRadioFilterCard
@@ -54,8 +53,7 @@ import com.example.stageconnect.presentation.screens.offer.viewmodel.JobDetailsV
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.presentation.viewmodels.OfferViewModel
 import com.example.stageconnect.ui.theme.BackgroundGray_
-import com.example.stageconnect.ui.theme.Blue
-import com.example.stageconnect.ui.theme.SoftBlue
+import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun AddOfferScreen(
@@ -82,6 +80,7 @@ fun AddOfferScreen(
         stringResource(R.string.options),
         SearchCriterion.EducationCriterion(),
         SearchCriterion.JobFunctionCriterion(),
+        stringResource(R.string.start_date),
         stringResource(R.string.requirements_and_skills_),
         stringResource(R.string.job_description),
         stringResource(R.string.company_description_)
@@ -108,6 +107,8 @@ fun AddOfferScreen(
     val initializeSalaryUnit = stringResource(R.string.per_month)
     var salaryUnit = remember { mutableStateOf(initializeSalaryUnit) }
     val experience = remember { mutableStateOf("") }
+    val startDate = remember { mutableStateOf("") }
+    val endDate = remember { mutableStateOf("") }
     val keySkills = remember { mutableStateOf(emptyList<String>()) }
     var requirementsAndSkills by remember { mutableStateOf("") }
     var jobDescription by remember { mutableStateOf("") }
@@ -141,7 +142,8 @@ fun AddOfferScreen(
             jobDescription = dto.jobDescription
             companyDescription = dto.companyDescription ?: profileViewModel.user.value?.summary.orEmpty()
             selectedWorkType.value = dto.workType
-
+            startDate.value = dto.startDate ?: ""
+            endDate.value = dto.endDate ?:""
             // Fill selectionState from offer
             selectionState[SearchCriteria.WORK_TYPE.label]?.apply {
                 clear(); if (dto.workType.isNotBlank()) add(dto.workType)
@@ -266,6 +268,42 @@ fun AddOfferScreen(
                                     onExpandToggle = { expandedStates[index] = !isExpanded }
                                 )
                             }
+                            stringResource(R.string.start_date) ->{
+                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column(
+                                        modifier = Modifier.weight(1f).padding(horizontal = 10.dp)
+                                    ) {
+                                        Text(text = stringResource(R.string.start_date), color = GrayFont, fontSize = 14.sp,
+                                            modifier = Modifier.padding(start = 10.dp))
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        CustomEditText(
+                                            defaultText = startDate.value,
+                                            label = stringResource(R.string.start_date),
+                                            isDate = true,
+                                            trailingIcon = R.drawable.ic_polygon,
+                                            onValueChange = { startDate.value = it }
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column (
+                                        modifier = Modifier.weight(1f).padding(horizontal = 10.dp)
+                                    ){
+                                        Text(text = stringResource(R.string.end_date), color = GrayFont, fontSize = 14.sp,
+                                            modifier = Modifier.padding(start = 10.dp))
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        CustomEditText(
+                                            defaultText = endDate.value,
+                                            label = stringResource(R.string.end_date),
+                                            isDate = true,
+                                            trailingIcon = R.drawable.ic_polygon,
+                                            onValueChange = { endDate.value = it }
+                                        )
+                                    }
+
+                                }
+                            }
                             stringResource(R.string.requirements_and_skills_) -> Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.Start
@@ -383,6 +421,8 @@ fun AddOfferScreen(
                     if (salaryStart <= 0L || salaryEnd <= 0L || salaryStart > salaryEnd) missingFields.add("Valid Salary Range")
                     if (experience.value.isBlank()) missingFields.add("Experience")
                     if (keySkills.value.isEmpty()) missingFields.add("Key Skills")
+                    if (startDate.value.isEmpty()) missingFields.add("Date de début")
+                    if (endDate.value.isEmpty()) missingFields.add("Date de fin")
                     if (requirementsAndSkills.isBlank()) missingFields.add("Requirements and Skills")
                     if (jobDescription.isBlank()) missingFields.add("Job Description")
                     if (companyDescription.isBlank()) missingFields.add("Company Description")
@@ -409,6 +449,8 @@ fun AddOfferScreen(
                         location = location.value,
                         salaryStart = salaryStart,
                         salaryEnd = salaryEnd,
+                        startDate = startDate.value,
+                        endDate = endDate.value,
                         salaryUnit = salaryUnit.value,
                         options = options,
                         experience = experience.value,
@@ -443,7 +485,7 @@ fun AddOfferScreen(
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -457,7 +499,7 @@ fun AddOfferScreen(
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 }

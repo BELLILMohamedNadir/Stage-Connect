@@ -1,5 +1,8 @@
 package com.example.stageconnect.domain.model
 
+import androidx.room.Entity
+
+@Entity(tableName = "offers")
 data class Offer(
     val id: Long? = null,
     val position: String,
@@ -13,6 +16,8 @@ data class Offer(
     val experience: String,
     val keySkills: List<String>,
     val requirementSkills: String,
+    val startDate: String? = null,
+    val endDate: String? = null,
     val jobDescription: String,
     val companyDescription: String?,
     val workType: String,

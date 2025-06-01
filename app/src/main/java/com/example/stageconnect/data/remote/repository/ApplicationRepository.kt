@@ -15,7 +15,9 @@ interface ApplicationRepository {
     suspend fun createApplication(applicationDto: String, file: File): ApplicationDto
     suspend fun getStudentApplications(id: Long): List<ApplicationDto>
     suspend fun getRecruiterApplications(id: Long): List<ApplicationDto>
+    suspend fun getEstablishmentApplications(id: Long): List<ApplicationDto>
     suspend fun deleteApplication(applicationId: Long, studentId: Long)
+    suspend fun updateApplication(applicationId: Long, applicationDto: ApplicationDto) : ApplicationDto
 }
 
 // Repository Implementation
@@ -42,7 +44,15 @@ class ApplicationRepositoryImpl @Inject constructor(
         return apiService.getRecruiterApplications(id)
     }
 
+    override suspend fun getEstablishmentApplications(id: Long): List<ApplicationDto> {
+        return apiService.getEstablishmentApplications(id)
+    }
+
     override suspend fun deleteApplication(applicationId: Long, studentId: Long) {
         apiService.deleteApplication(applicationId, studentId)
+    }
+
+    override suspend fun updateApplication(applicationId: Long, applicationDto: ApplicationDto): ApplicationDto {
+        return apiService.updateApplication(applicationId, applicationDto)
     }
 }

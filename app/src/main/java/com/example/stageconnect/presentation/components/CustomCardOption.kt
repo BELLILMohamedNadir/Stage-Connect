@@ -58,7 +58,7 @@ fun CustomCardOption(modifier: Modifier = Modifier,
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = option,
+                Text(text = option.trim(),
                     fontFamily = LibreBaskerVilleBold,
                     fontWeight = FontWeight.W600,
                     fontSize = 13.sp,

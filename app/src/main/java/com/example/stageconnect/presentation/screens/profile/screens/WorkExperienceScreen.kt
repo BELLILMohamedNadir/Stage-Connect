@@ -1,13 +1,9 @@
 package com.example.stageconnect.presentation.screens.profile.screens
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,33 +15,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
-import com.example.stageconnect.data.dtos.InternshipDto
 import com.example.stageconnect.data.dtos.WorkExperienceDto
 import com.example.stageconnect.domain.DateComparator
 import com.example.stageconnect.domain.model.enums.EmploymentType
 import com.example.stageconnect.domain.model.enums.JobFunction
 import com.example.stageconnect.domain.model.enums.JobLevel
 import com.example.stageconnect.presentation.components.AppButton
-import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
 import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.components.CustomTextArea
 import com.example.stageconnect.presentation.components.CustomToggleSwitch
-import com.example.stageconnect.presentation.components.ErrorMessage
-import com.example.stageconnect.presentation.components.NotFound
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
-import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.presentation.screens.profile.viewmodels.WorkExperienceViewModel
 import com.example.stageconnect.ui.theme.GrayFont
 
@@ -55,15 +45,15 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                          onNext: () -> Unit
 ) {
     val inputFields = listOf(
-        stringResource(R.string.job_title) to emptyList(),
-        stringResource(R.string.company) to emptyList(),
-        stringResource(R.string.from) to emptyList(),
-        stringResource(R.string.i_currently_work_here) to emptyList(),
-        stringResource(R.string.description_optional) to emptyList(),
-        stringResource(R.string.employment_type_) to EmploymentType.entries.map { it.label },
-        stringResource(R.string.location) to emptyList(),
-        stringResource(R.string.job_level) to JobLevel.entries.map { it.label },
-        stringResource(R.string.job_function) to JobFunction.entries.map { it.label }
+        R.string.job_title to emptyList(),
+        R.string.company to emptyList(),
+        R.string.from to emptyList(),
+        R.string.i_currently_work_here to emptyList(),
+        R.string.description_optional to emptyList(),
+        R.string.employment_type_ to EmploymentType.entries.map { it.label },
+        R.string.location to emptyList(),
+        R.string.job_level to JobLevel.entries.map { it.label },
+        R.string.job_function to JobFunction.entries.map { it.label }
     )
 
     val jobTitle = rememberSaveable { mutableStateOf("") }
@@ -80,11 +70,11 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
     val stateMap = mapOf(
-        stringResource(R.string.job_title) to jobTitle,
-        stringResource(R.string.employment_type_) to employmentType,
-        stringResource(R.string.location) to location,
-        stringResource(R.string.job_level) to jobLevel,
-        stringResource(R.string.job_function) to jobFunction,
+        R.string.job_title to jobTitle,
+        R.string.employment_type_ to employmentType,
+        R.string.location to location,
+        R.string.job_level to jobLevel,
+        R.string.job_function to jobFunction,
     )
 
     val createWorkExperienceResult by workExperienceViewModel.createWorkExperienceResult.observeAsState()
@@ -98,7 +88,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -112,7 +102,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
 
                 inputFields.forEach { (label, list) ->
                     when (label) {
-                        stringResource(R.string.description_optional) -> {
+                        R.string.description_optional -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -127,7 +117,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.from)-> {
+                        R.string.from -> {
                             Row(modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -165,7 +155,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.i_currently_work_here)-> {
+                        R.string.i_currently_work_here -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -177,32 +167,32 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.job_title)-> {
+                        R.string.job_title -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { jobTitle.value = it}
                                 )
                             }
                         }
 
-                        stringResource(R.string.company)-> {
+                        R.string.company -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { company.value = it }
                                 )
@@ -215,11 +205,11 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     list = list,
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
@@ -253,7 +243,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
     }
     if (showErrorMessage){
         showErrorMessage = false
-        ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+        CustomMessage.Show(stringResource(R.string.add_necessary_data))
     }
 }
 

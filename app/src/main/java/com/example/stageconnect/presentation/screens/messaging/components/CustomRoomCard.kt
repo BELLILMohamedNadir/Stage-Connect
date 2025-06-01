@@ -90,9 +90,13 @@ fun CustomRoomCard(modifier: Modifier = Modifier,
                         Text(
                             modifier = Modifier.weight(1f),
                             text = buildAnnotatedString {
-                                if (roomDto.senderId == userId)
-                                    append("${stringResource(R.string.you)}: ")
-                                append(roomDto.lastMessage)
+                                if (roomDto.lastMessage.isNotEmpty()){
+                                    if (roomDto.senderId == userId)
+                                        append("${stringResource(R.string.you)}: ")
+                                    append(roomDto.lastMessage)
+                                }else{
+                                    append(stringResource(R.string.send_first_message))
+                                }
                             },
                             fontFamily = LibreBaskerVilleBold,
                             fontWeight = FontWeight.W500,

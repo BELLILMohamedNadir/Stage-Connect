@@ -26,9 +26,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
+import com.example.stageconnect.presentation.components.NoDataFound
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.messaging.components.CustomRoomCard
@@ -43,6 +43,7 @@ fun RoomScreen(modifier: Modifier = Modifier,
                onNavigate: () -> Unit
 ) {
     val filteredItems by roomViewModel.filteredRooms.observeAsState(initial = emptyList())
+    val rooms by roomViewModel.rooms.observeAsState(initial = emptyList())
     var searchedText by remember { mutableStateOf("") }
     val isLoading = remember { mutableStateOf(false) }
 
@@ -60,7 +61,6 @@ fun RoomScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -73,9 +73,10 @@ fun RoomScreen(modifier: Modifier = Modifier,
                 verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Spacer(modifier = Modifier.height(5.dp))
-                    CustomSearchBar (trailingIcon = -1){
+                    CustomSearchBar (trailingIcon = -1, onValueChange = {
                         searchedText = it
                         roomViewModel.applyFilter(searchedText)
+                    }){
                     }
                 }
             }
@@ -83,45 +84,49 @@ fun RoomScreen(modifier: Modifier = Modifier,
             Spacer(modifier = Modifier.height(16.dp))
 
             //Body
-            if (filteredItems.isNotEmpty()){
-                // founded elements
-                if (searchedText.isNotEmpty()){
-                    Column (
-                        modifier = Modifier.fillMaxWidth().padding(start = 50.dp),
-                        horizontalAlignment = Alignment.Start,
-                    ){
-                        if (filteredItems.isNotEmpty()){
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(text = "${filteredItems.size} ${stringResource(R.string.found)}",
-                                fontFamily = LibreBaskerVilleBold,
-                                fontWeight = FontWeight.W600,
-                                fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-                }
-                //application list
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(24.dp),
-                        contentPadding = PaddingValues(end = 10.dp, start = 10.dp, top = 24.dp, bottom = 8.dp)
-                    ){
-                        items(filteredItems.size){ index ->
-                            CustomRoomCard(roomDto = filteredItems[index], userId = roomViewModel.getUserId()){ roomDto ->
-                                roomViewModel.setRoom(roomDto = roomDto)
-                                onNavigate()
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Spacer(modifier = Modifier.height(2.dp).fillMaxWidth(fraction = 0.9f).background(color = BackgroundGray))
-                        }
-                    }
-                }
+            if (rooms.isEmpty()){
+                NotFound(showMessage = false)
             }else{
-                NotFound()
+                if (filteredItems.isNotEmpty()){
+                    // founded elements
+                    if (searchedText.isNotEmpty()){
+                        Column (
+                            modifier = Modifier.fillMaxWidth().padding(start = 50.dp),
+                            horizontalAlignment = Alignment.Start,
+                        ){
+                            if (filteredItems.isNotEmpty()){
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(text = "${filteredItems.size} ${stringResource(R.string.found)}",
+                                    fontFamily = LibreBaskerVilleBold,
+                                    fontWeight = FontWeight.W600,
+                                    fontSize = 16.sp)
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+                    }
+                    //rooms list
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(24.dp),
+                            contentPadding = PaddingValues(end = 10.dp, start = 10.dp, top = 24.dp, bottom = 8.dp)
+                        ){
+                            items(filteredItems.size){ index ->
+                                CustomRoomCard(roomDto = filteredItems[index], userId = roomViewModel.getUserId()){ roomDto ->
+                                    roomViewModel.setRoom(roomDto = roomDto)
+                                    onNavigate()
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(2.dp).fillMaxWidth(fraction = 0.9f).background(color = BackgroundGray))
+                            }
+                        }
+                    }
+                }else{
+                    NoDataFound()
+                }
             }
         }
     }else{

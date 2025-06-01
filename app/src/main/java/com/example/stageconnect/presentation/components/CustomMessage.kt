@@ -1,11 +1,10 @@
 package com.example.stageconnect.presentation.components
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-object ErrorMessage {
+object CustomMessage {
     @Composable
     fun Show(message: String) {
         val context = LocalContext.current

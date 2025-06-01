@@ -25,14 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
-import com.example.stageconnect.data.dtos.EducationDto
 import com.example.stageconnect.data.dtos.InternshipDto
 import com.example.stageconnect.domain.DateComparator
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.components.CustomTextArea
 import com.example.stageconnect.presentation.components.CustomToggleSwitch
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.viewmodels.InternshipViewModel
 import com.example.stageconnect.ui.theme.GrayFont
@@ -44,13 +43,13 @@ fun InternshipScreen(modifier: Modifier = Modifier,
 ) {
 
     val inputFields = listOf(
-        stringResource(R.string.title),
-        stringResource(R.string.organization),
-        stringResource(R.string.role_optional),
-        stringResource(R.string.from),
-        stringResource(R.string.current),
-        stringResource(R.string.description_optional),
-        stringResource(R.string.organization_website_link_optional),
+        R.string.title,
+        R.string.organization,
+        R.string.role_optional,
+        R.string.from,
+        R.string.current,
+        R.string.description_optional,
+        R.string.organization_website_link_optional,
     )
 
     val title = rememberSaveable { mutableStateOf("") }
@@ -65,10 +64,10 @@ fun InternshipScreen(modifier: Modifier = Modifier,
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
     val stateMap = mapOf(
-        stringResource(R.string.title) to title,
-        stringResource(R.string.organization) to organization,
-        stringResource(R.string.role_optional) to role,
-        stringResource(R.string.organization_website_link_optional) to websiteLink,
+        R.string.title to title,
+        R.string.organization to organization,
+        R.string.role_optional to role,
+        R.string.organization_website_link_optional to websiteLink,
     )
 
     val createInternshipResult by internshipViewModel.createInternshipResult.observeAsState()
@@ -82,7 +81,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -97,7 +96,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                 inputFields.forEach { label ->
 
                     when (label) {
-                        stringResource(R.string.description_optional) -> {
+                        R.string.description_optional -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -112,7 +111,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.from) -> {
+                        R.string.from -> {
                             Row(modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -150,7 +149,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.current) -> {
+                        R.string.current -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -166,11 +165,11 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
                                 )
@@ -202,7 +201,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
     }
     if (showErrorMessage){
         showErrorMessage = false
-        ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+        CustomMessage.Show(stringResource(R.string.add_necessary_data))
     }
 }
 

@@ -26,19 +26,19 @@ import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 
 @Composable
-fun NoDataFound(modifier: Modifier = Modifier, showMessage: Boolean = true) {
+fun NoDataFound(modifier: Modifier = Modifier) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ){
-        Image(painter = painterResource(R.drawable.bad_request),
+        Image(painter = painterResource(R.drawable.ic_empty_state),
             contentDescription = "bad request image",
             modifier = Modifier.height(320.dp).width(360.dp),
             contentScale = ContentScale.Crop)
 
         Spacer(modifier = Modifier.height(20.dp))
-        Text(text = stringResource(R.string.not_found),
+        Text(text = stringResource(R.string.no_results_found),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             fontWeight = FontWeight.W700,
             fontSize = 24.sp,
@@ -46,16 +46,14 @@ fun NoDataFound(modifier: Modifier = Modifier, showMessage: Boolean = true) {
             textAlign = TextAlign.Center
         )
 
-        if (showMessage){
-            Spacer(modifier = Modifier.height(30.dp))
-            Text(text = stringResource(R.string.not_found_error_message),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                fontFamily = LibreBaskerVilleBold,
-                fontWeight = FontWeight.W500,
-                fontSize = 16.sp,
-                color = GrayFont,
-                textAlign = TextAlign.Center
-            )
-        }
+        Spacer(modifier = Modifier.height(30.dp))
+        Text(text = stringResource(R.string.not_found_error_message),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            fontFamily = LibreBaskerVilleBold,
+            fontWeight = FontWeight.W500,
+            fontSize = 16.sp,
+            color = GrayFont,
+            textAlign = TextAlign.Center
+        )
     }
 }

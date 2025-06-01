@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.home.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,8 +32,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
 import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.presentation.components.CustomOfferCard
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.NoDataFound
+import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.components.ProfileImage
 import com.example.stageconnect.presentation.screens.home.components.CustomSearchBar
@@ -50,6 +52,7 @@ fun RecruiterHomeScreen(modifier: Modifier = Modifier,
                         offerViewModel: OfferViewModel = hiltViewModel(),
                         onFilterClick: () -> Unit,
                         onOfferCardClick: () -> Unit,
+                        onSeeAll: () -> Unit,
                         onSearchClick: () -> Unit) {
 
     val isLoading = remember { mutableStateOf(false) }
@@ -69,56 +72,55 @@ fun RecruiterHomeScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
 
     if (!isLoading.value){
-        if (offers.value.isNotEmpty()){
-            LazyColumn(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(bottom = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 10.dp)
-            ) {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 10.dp)
+        ) {
 
-                item {
-                    // User Greeting and Search
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp, start = 24.dp, end = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+            item {
+                // User Greeting and Search
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp, start = 24.dp, end = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ProfileImage(profileViewModel.user.value?.photo, 60.dp)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Good Morning!",
-                                    fontFamily = LibreBaskerVilleBold,
-                                    fontWeight = FontWeight.W500,
-                                    fontSize = 15.sp,
-                                    color = GrayFont,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = "BELLIL Mohamed",
-                                    fontFamily = LibreBaskerVilleBold,
-                                    fontWeight = FontWeight.W600,
-                                    fontSize = 15.sp,
-                                    color = Color.Black,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                        ProfileImage(profileViewModel.user.value?.photo, 60.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Good Morning!",
+                                fontFamily = LibreBaskerVilleBold,
+                                fontWeight = FontWeight.W500,
+                                fontSize = 15.sp,
+                                color = GrayFont,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${profileViewModel.user.value?.name ?: ""} ${profileViewModel.user.value?.firstName ?: ""}",
+                                fontFamily = LibreBaskerVilleBold,
+                                fontWeight = FontWeight.W600,
+                                fontSize = 15.sp,
+                                color = Color.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
+                    }
+                    if (offers.value.isNotEmpty()){
                         Spacer(modifier = Modifier.height(20.dp))
                         CustomSearchBar(
                             onFilterClick = {onFilterClick()}
@@ -140,30 +142,34 @@ fun RecruiterHomeScreen(modifier: Modifier = Modifier,
                             )
                             Text(
                                 text = stringResource(R.string.see_all),
+                                modifier = Modifier.clickable {
+                                    onSeeAll()
+                                },
                                 fontFamily = LibreBaskerVilleBold,
                                 fontWeight = FontWeight.W600,
                                 fontSize = 15.sp,
                                 color = Blue
                             )
                         }
-                    }
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        offers.value.forEach { item ->
-                            CustomOfferCard(offerDto = item){ offer ->
-                                jobDetailsViewModel.setOffer(offer)
-                                onOfferCardClick()
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            offers.value.forEach { item ->
+                                CustomOfferCard(offerDto = item, showSaveIcon = false){ offer ->
+                                    jobDetailsViewModel.setOffer(offer)
+                                    onOfferCardClick()
+                                }
                             }
-                        }
 
+                        }
+                    }else{
+                        NotFound(showMessage = false)
                     }
                 }
+
             }
-        }else{
-            NoDataFound(showMessage = false)
         }
     }else{
         Column(

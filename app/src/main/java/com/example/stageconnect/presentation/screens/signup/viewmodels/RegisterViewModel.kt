@@ -1,9 +1,11 @@
 package com.example.stageconnect.presentation.screens.signup.viewmodels
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stageconnect.data.dtos.AuthDto
 import com.example.stageconnect.data.dtos.EstablishmentsDto
 import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.domain.model.enums.ROLE
@@ -25,6 +27,8 @@ class RegisterViewModel @Inject constructor(
     private val _registerResult = MutableLiveData<Result<String>?>()
     val registerResult: MutableLiveData<Result<String>?> get() = _registerResult
 
+    private var _selectedIndex: Int = 1
+
     private val _getAllEstablishmentResult = MutableLiveData<Result<List<EstablishmentsDto>>?>()
     val getAllEstablishmentResult: MutableLiveData<Result<List<EstablishmentsDto>>?> get() = _getAllEstablishmentResult
 
@@ -38,18 +42,19 @@ class RegisterViewModel @Inject constructor(
     fun getPassword(): String? = _password.value
     fun getExpertise(): List<String>? = _expertises.value
 
-    fun register(userDtoJson: UserDto, imageUri: Uri?) {
+    fun register(authDto: AuthDto, imageUri: Uri?) {
         viewModelScope.launch {
             _registerResult.postValue(Result.Loading(""))
             delay(100)
             try {
-                val result = registerUseCase.execute(userDtoJson, imageUri)
+                val result = registerUseCase.execute(authDto, imageUri)
                 _registerResult.postValue(Result.Success(result))
             } catch (e: Exception) {
                 _registerResult.postValue(Result.Error(e))
             }
         }
     }
+
 
     fun getAllEstablishment() {
         viewModelScope.launch {
@@ -88,4 +93,11 @@ class RegisterViewModel @Inject constructor(
         _expertises.value = expertise
     }
 
+    fun setSelectedIndex(index: Int){
+        this._selectedIndex = index
+    }
+
+    fun getSelectedIndex():Int{
+        return this._selectedIndex
+    }
 }

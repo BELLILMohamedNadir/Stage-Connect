@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.home.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +39,8 @@ import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.data.dummy.DummyDataProvider
 import com.example.stageconnect.presentation.components.CustomOfferCard
 import com.example.stageconnect.presentation.components.CustomCardOption
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
+import com.example.stageconnect.presentation.components.NoDataFound
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.components.ProfileImage
@@ -54,13 +58,15 @@ fun StudentHomeScreen(modifier: Modifier = Modifier,
                       profileViewModel: ProfileViewModel,
                       offerViewModel: OfferViewModel = hiltViewModel(),
                       onFilterClick: () -> Unit,
+                      onSeeAll: () -> Unit,
                       onOfferCardClick: () -> Unit,
                       onSearchClick: () -> Unit) {
 
     var selectedOption by remember { mutableIntStateOf(0) }
     val isLoading = remember { mutableStateOf(false) }
     var offers = emptyList<OfferDto>()
-    val jobs = DummyDataProvider.jobs
+    val recommendedOffers = offerViewModel.filteredOffers.observeAsState()
+    val options = LocalContext.current.resources.getStringArray(R.array.options).toList()
 
     val getAllOfferResult by offerViewModel.getAllOfferResult.observeAsState()
 
@@ -77,65 +83,71 @@ fun StudentHomeScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
 
-    if (!isLoading.value){
-        if (offers.isNotEmpty()){
-            LazyColumn(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(bottom = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 10.dp)
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        // User Greeting and Search
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp, start = 24.dp, end = 24.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                ProfileImage(profileViewModel.user.value?.photo, 60.dp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Good Morning!",
+                        fontFamily = LibreBaskerVilleBold,
+                        fontWeight = FontWeight.W500,
+                        fontSize = 15.sp,
+                        color = GrayFont,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "${profileViewModel.user.value?.name ?: ""} ${profileViewModel.user.value?.firstName ?: ""}",
+                        fontFamily = LibreBaskerVilleBold,
+                        fontWeight = FontWeight.W600,
+                        fontSize = 15.sp,
+                        color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            CustomSearchBar(
+                onFilterClick = {onFilterClick()}
+            ) {
+                onSearchClick()
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+        }
 
-                item {
-                    // User Greeting and Search
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp, start = 24.dp, end = 24.dp),
-                        horizontalAlignment = Alignment.Start
-                    ) {
+        if (!isLoading.value){
+            if (offers.isNotEmpty()){
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 10.dp)
+                ) {
+
+                    item {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ProfileImage(profileViewModel.user.value?.photo, 60.dp)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Good Morning!",
-                                    fontFamily = LibreBaskerVilleBold,
-                                    fontWeight = FontWeight.W500,
-                                    fontSize = 15.sp,
-                                    color = GrayFont,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = "BELLIL Mohamed",
-                                    fontFamily = LibreBaskerVilleBold,
-                                    fontWeight = FontWeight.W600,
-                                    fontSize = 15.sp,
-                                    color = Color.Black,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        CustomSearchBar(
-                            onFilterClick = {onFilterClick()}
-                        ) {
-                            onSearchClick()
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp, start = 24.dp, end = 24.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -148,106 +160,128 @@ fun StudentHomeScreen(modifier: Modifier = Modifier,
                             )
                             Text(
                                 text = stringResource(R.string.see_all),
+                                modifier = Modifier.clickable {
+                                    onSeeAll()
+                                },
                                 fontFamily = LibreBaskerVilleBold,
                                 fontWeight = FontWeight.W600,
                                 fontSize = 15.sp,
                                 color = Blue
                             )
                         }
-                    }
-                }
-
-                item {
-                    // Recommended Offers (Horizontal Scroll)
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth().padding(start = 24.dp),
-                        contentPadding = PaddingValues(end = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(offers.size) { index ->
-                            CustomOfferCard(offerDto = offers[index]){ offer ->
-                                jobDetailsViewModel.setOffer(offer)
-                                onOfferCardClick()
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    // Recent Jobs Title
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp, start = 24.dp, end = 24.dp),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Recommended Offers (Horizontal Scroll)
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 24.dp),
+                            contentPadding = PaddingValues(end = 10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(
-                                text = stringResource(R.string.recent_jobs),
-                                fontFamily = LibreBaskerVilleBold,
-                                fontWeight = FontWeight.W600,
-                                fontSize = 16.sp,
-                                color = Color.Black
-                            )
-                            Text(
-                                text = stringResource(R.string.see_all),
-                                fontFamily = LibreBaskerVilleBold,
-                                fontWeight = FontWeight.W600,
-                                fontSize = 15.sp,
-                                color = Blue
-                            )
+                            if (offers.isEmpty()) {
+                                item{
+                                    NoDataFound()
+                                }
+                            }else{
+                                items(offers.size) { index ->
+                                    CustomOfferCard(offerDto = offers[index]){ offer ->
+                                        jobDetailsViewModel.setOffer(offer)
+                                        onOfferCardClick()
+                                    }
+                                }
+                            }
                         }
                     }
-                }
 
-                item {
-
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth().padding(start = 24.dp),
-                        contentPadding = PaddingValues(end = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(jobs.size) { index ->
-                            CustomCardOption(
-                                index = index,
-                                option = jobs[index],
-                                isSelected = selectedOption == index
+                    item {
+                        // Recent Jobs Title
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp, start = 24.dp, end = 24.dp),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                selectedOption = index
+                                Text(
+                                    text = stringResource(R.string.recent_jobs),
+                                    fontFamily = LibreBaskerVilleBold,
+                                    fontWeight = FontWeight.W600,
+                                    fontSize = 16.sp,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    text = stringResource(R.string.see_all),
+                                    modifier = Modifier.clickable {
+                                        onSeeAll()
+                                    },
+                                    fontFamily = LibreBaskerVilleBold,
+                                    fontWeight = FontWeight.W600,
+                                    fontSize = 15.sp,
+                                    color = Blue
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 24.dp),
+                            contentPadding = PaddingValues(end = 10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(options.size) { index ->
+                                CustomCardOption(
+                                    index = index,
+                                    option = options[index],
+                                    isSelected = selectedOption == index
+                                ) {
+                                    selectedOption = index
+                                    offerViewModel.applyFilter(options[index])
+                                }
+                            }
+                        }
+                    }
+
+                    // Vertical Offer List
+                    if (recommendedOffers.value?.isEmpty()!!) {
+                        item{
+                            NoDataFound()
+                        }
+                    }else{
+                        items(recommendedOffers.value?.size!!) { index ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 48.dp),
+                            ) {
+                                CustomOfferCard(offerDto = offers[index]){ offer ->
+                                    jobDetailsViewModel.setOffer(offer)
+                                    onOfferCardClick()
+                                }
                             }
                         }
                     }
                 }
-
-                // Vertical Offer List
-                items(offers.size) { index ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 48.dp),
-                    ) {
-                        CustomOfferCard(offerDto = offers[index]){ offer ->
-                            jobDetailsViewModel.setOffer(offer)
-                            onOfferCardClick()
-                        }
-                    }
-                }
+            }else{
+                NotFound(showMessage = false)
             }
         }else{
-            NotFound(showMessage = false)
+            Column(
+                modifier = modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
-    }else{
-        Column(
-            modifier = modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator()
-        }
+
     }
 
 }

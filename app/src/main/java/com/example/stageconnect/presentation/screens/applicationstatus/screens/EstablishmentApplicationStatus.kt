@@ -37,15 +37,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stageconnect.R
+import com.example.stageconnect.data.dtos.OfferDto
+import com.example.stageconnect.data.dtos.RecruiterDto
+import com.example.stageconnect.data.dtos.RoomDto
+import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.domain.FileUtils
 import com.example.stageconnect.domain.model.enums.STATUS
 import com.example.stageconnect.presentation.components.AppButton
-import com.example.stageconnect.presentation.components.CustomTextArea
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.components.ProfileImage
 import com.example.stageconnect.presentation.screens.applications.viewmodels.ApplicationViewModel
+import com.example.stageconnect.presentation.screens.applicationstatus.components.CustomApplicationDialog
+import com.example.stageconnect.presentation.screens.applicationstatus.components.CustomCard
+import com.example.stageconnect.presentation.screens.applicationstatus.components.CustomUserInformationUpdatedDialog
 import com.example.stageconnect.presentation.screens.profile.components.CustomFileCard
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.ui.theme.BackgroundGray_
@@ -65,21 +71,40 @@ fun EstablishmentApplicationStatus(
     modifier: Modifier = Modifier,
     applicationViewModel: ApplicationViewModel,
     profileViewModel: ProfileViewModel,
-    onMessageNavigation: () -> Unit,
+    onMessageNavigation: (RoomDto) -> Unit,
+    onOfferDetailsClick: (OfferDto) -> Unit,
+    onNavigate: () -> Unit,
+    onCompanyDetailsClick: () -> Unit,
     onNext: () -> Unit
 ) {
     val application = applicationViewModel.application.value
     val offer = application?.offerDto
+    val user = profileViewModel.user.value
     var fileUri by remember { mutableStateOf<Uri?>(null) }
+    var conventionUri by remember { mutableStateOf<Uri?>(null) }
     val isAcceptLoading = remember { mutableStateOf(false) }
     val isRejectLoading = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var showDialogUserInformationUpdated by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val downloadFileResult by profileViewModel.downloadFileResult.observeAsState()
-
+    val updateApplicationResult by applicationViewModel.updateApplicationResult.observeAsState()
+    var currentDownloadType by remember { mutableStateOf("resume") }
+    var downloadConvention by remember { mutableStateOf(false) }
+    var downloadResume by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        if (application?.resumeUrl != null && application.resumeUrl!!.isNotBlank())
-            profileViewModel.downloadFile(application.resumeUrl!!)
+        if ((application?.conventionUrl?:"").isNotBlank()){
+            application?.conventionUrl?.takeIf { it.isNotBlank() }?.let {
+                downloadConvention = true
+                profileViewModel.downloadFile(it)
+            }
+        }else{
+            application?.resumeUrl?.takeIf { it.isNotBlank() }?.let {
+                downloadResume = true
+                profileViewModel.downloadFile(it)
+            }
+        }
     }
 
     ObserveResult(
@@ -88,18 +113,29 @@ fun EstablishmentApplicationStatus(
             // Show loading indicator if needed
         },
         onSuccess = { response ->
-            // Launch in IO dispatcher for file operations
             GlobalScope.launch(Dispatchers.IO) {
                 try {
                     response.body()?.byteStream()?.use { inputStream ->
+                        val fileName = if (currentDownloadType == "resume") "cv" else if (application?.refused!!) "lettre-refus" else "convention-stage"
                         val uri = FileUtils.savePdfToLocal(
                             context = context,
-                            fileName = "cv",
+                            fileName = fileName,
                             inputStream = inputStream
                         )
 
                         withContext(Dispatchers.Main) {
-                            fileUri = uri
+                            if (currentDownloadType == "resume") {
+                                downloadResume = false
+                                fileUri = uri
+                                if (!application?.conventionUrl.isNullOrBlank()) {
+                                    downloadConvention = true
+                                    currentDownloadType = "convention"
+                                    profileViewModel.downloadFile(application!!.conventionUrl!!)
+                                }
+                            } else {
+                                downloadConvention = false
+                                conventionUri = uri
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -108,7 +144,25 @@ fun EstablishmentApplicationStatus(
             }
         },
         onError = {
-            ErrorMessage.Show(stringResource(R.string.error_occurred_when_uploading_resume))
+            CustomMessage.Show(stringResource(R.string.error_occurred_when_uploading_resume))
+        }
+    )
+
+    ObserveResult(
+        result = updateApplicationResult,
+        onLoading = {
+            // Show loading indicator if needed
+        },
+        onSuccess = { response ->
+            // Launch in IO dispatcher for file operations
+            isAcceptLoading.value = false
+            isRejectLoading.value = false
+            showDialog = false
+            applicationViewModel.clearData()
+            onNext()
+        },
+        onError = {
+            CustomMessage.Show(stringResource(R.string.error_occurred_when_uploading_resume))
         }
     )
 
@@ -200,7 +254,7 @@ fun EstablishmentApplicationStatus(
                         ProfileImage(imageUri = application.logoUrl, imageSize = 80.dp)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = offer.company ?: "",
+                            text = application.studentName,
                             textAlign = TextAlign.Center,
                             color = Blue,
                             fontSize = 15.sp,
@@ -209,168 +263,138 @@ fun EstablishmentApplicationStatus(
 
                         IconButton(
                             onClick = {
-                                onMessageNavigation()
+                                onMessageNavigation(application.roomDto!!)
                             }
                         ) {
                             Icon(painter = painterResource(R.drawable.ic_message_bottom_navigation), contentDescription = "message Icon", tint = Color.Unspecified)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+
+                    CustomCard(label = stringResource(R.string.offer_details)) {
+                        onOfferDetailsClick(application.offerDto!!)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    CustomCard(label = stringResource(R.string.company_details)) {
+                        profileViewModel.setRecruiterDto(RecruiterDto(
+                            organizationName = application.companyName,
+                            address = application.companyAddress,
+                            summary = application.companySummary
+                        ))
+                        profileViewModel.setShowRecruiterData(true)
+                        onCompanyDetailsClick()
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     //cv
                     CustomFileCard(
                         uri = fileUri, context = context,
                         isApplication = true,
+                        isLoading = downloadResume,
                         onDeleteClick = { fileUri  = null }) {
                         FileUtils.openPdf(context = context, uri = it)
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    //profile_summary
-                    Text(
-                        text = stringResource(R.string.profile_summary),
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Text(
-                        text = "",
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    //work_experience
-                    Text(
-                        text = stringResource(R.string.work_experience),
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Text(
-                        text = "",
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    //education
-                    Text(
-                        text = stringResource(R.string.education),
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Text(
-                        text = "",
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    //certifications
-                    Text(
-                        text = stringResource(R.string.certifications),
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Text(
-                        text = "",
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    //projects
-                    Text(
-                        text = stringResource(R.string.projects),
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                    Text(
-                        text = "",
-                        textAlign = TextAlign.Start,
-                        color = Color.Black,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    //cover letter
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Text(text = stringResource(R.string.cover_letter), color = Color.Black, fontSize = 18.sp)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        CustomTextArea(
-                            enabled = false,
-                            label = stringResource(R.string.cover_letter),
-                            defaultText = application.coverLetter
-                        ) {
-                        }
-                    }
                 }
             }
             //Accept and Reject Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 8.dp, start = 8.dp, top = 8.dp, bottom = 4.dp),
+                    .padding(end = if (application.status != STATUS.SENT) 0.dp else 8.dp, start = if (application.status != STATUS.SENT) 0.dp else 8.dp, top = 8.dp, bottom =  4.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (!isAcceptLoading.value){
-                    AppButton(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.reject),
-                        contentColor = RedFont,
-                        containerColor = RedBackground,
-                        isLoading = isRejectLoading
+                if (application.status != STATUS.SENT){
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        CustomFileCard(
+                            uri = conventionUri, context = context,
+                            isApplication = true,
+                            isLoading = downloadConvention,
+                            onDeleteClick = { conventionUri  = null }) {
+                            FileUtils.openPdf(context = context, uri = it)
+                        }
+                    }
+                }else{
+                    if (!isAcceptLoading.value){
+                        AppButton(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(R.string.reject),
+                            contentColor = RedFont,
+                            containerColor = RedBackground,
+                            isLoading = isRejectLoading
+                        ) {
+                            if(userInformationUpdate(user = user)){
+                                showDialog = true
+                            }else{
+                                showDialogUserInformationUpdated = true
+                            }
+                        }
 
                     }
-
-                }
-                if (!isAcceptLoading.value || !isRejectLoading.value){
-                    Spacer(modifier = Modifier.width(12.dp))
-                }
-                if (!isRejectLoading.value){
-                    AppButton(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(R.string.accept),
-                        contentColor = GreenFont,
-                        containerColor = GreenBackground,
-                        isLoading = isAcceptLoading
-                    ) {
-
+                    if (!isAcceptLoading.value || !isRejectLoading.value){
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+                    if (!isRejectLoading.value){
+                        AppButton(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(R.string.accept),
+                            contentColor = GreenFont,
+                            containerColor = GreenBackground,
+                            isLoading = isAcceptLoading
+                        ) {
+                            if (userInformationUpdate(user = user)){
+                                isAcceptLoading.value = true
+                                application.establishmentStatus = STATUS.ACCEPTED
+                                applicationViewModel.updateApplication(
+                                    application.id!!,
+                                    application
+                                )
+                            }else{
+                                showDialogUserInformationUpdated = true
+                            }
+                        }
                     }
                 }
+            }
+        }
+        if (showDialog){
+            CustomApplicationDialog(
+                label = stringResource(R.string.add_reason),
+                application = application,
+                isLoading = isRejectLoading,
+                onDismiss = {showDialog = false}
+            ) { refusedReason ->
+                isRejectLoading.value = true
+                application.establishmentStatus = STATUS.REJECTED
+                application.refusedReason = refusedReason
+                applicationViewModel.updateApplication(
+                    application.id!!,
+                    application
+                )
+            }
+        }
+        if (showDialogUserInformationUpdated){
+            CustomUserInformationUpdatedDialog(
+                label = stringResource(R.string.you_have_to_update_your_information),
+                onDismiss = {showDialogUserInformationUpdated = false},
+            ) {
+                onNavigate()
+                showDialogUserInformationUpdated = false
             }
         }
     } else {
         NotFound()
     }
 }
+
+fun userInformationUpdate(user: UserDto?): Boolean = (user?.organizationName ?: "").isNotBlank() && (user?.summary ?: "").isNotBlank()
+        && (user?.address ?: "").isNotBlank()

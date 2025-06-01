@@ -12,17 +12,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.stageconnect.data.dtos.OfferDto
+import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.presentation.components.CustomOfferCard
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.screens.offer.viewmodel.JobDetailsViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.ui.theme.BackgroundGray_
 
 @Composable
 fun JobDetailsScreen(modifier: Modifier = Modifier,
                      jobDetailsViewModel: JobDetailsViewModel,
+                     profileViewModel: ProfileViewModel,
                      onApply: (OfferDto) -> Unit) {
 
     val offer = jobDetailsViewModel.offer.value
+    val source = jobDetailsViewModel.source.value
+    val user = profileViewModel.user.value
 
     if (offer == null){
         NotFound()
@@ -36,12 +41,13 @@ fun JobDetailsScreen(modifier: Modifier = Modifier,
                 CustomOfferCard(offerDto = offer,
                     showDate = true,
                     showLabel = true,
+                    showSaveIcon = user?.role!! == ROLE.STUDENT,
                     onSavedClick = {
                     })
                 Spacer(modifier = Modifier.height(36.dp))
                 Spacer(modifier = Modifier.height(1.dp).fillMaxWidth(fraction = 0.9f).background(BackgroundGray_))
                 Spacer(modifier = Modifier.height(10.dp))
-                JobDescriptionScreen(offer = offer){
+                JobDescriptionScreen(offer = offer, source = source){
                     onApply(offer)
                 }
             }

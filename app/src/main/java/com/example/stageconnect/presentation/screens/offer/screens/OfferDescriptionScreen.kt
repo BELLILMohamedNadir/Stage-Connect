@@ -1,6 +1,7 @@
 package com.example.stageconnect.presentation.screens.offer.screens
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +36,8 @@ import com.example.stageconnect.R
 import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomCardOption
+import com.example.stageconnect.presentation.components.CustomMessage
+import com.example.stageconnect.presentation.navigation.Screen
 import com.example.stageconnect.ui.theme.Blue
 import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
@@ -40,11 +47,13 @@ import com.example.stageconnect.ui.theme.LibreBaskerVilleBold
 fun JobDescriptionScreen(
     modifier: Modifier = Modifier,
     offer: OfferDto,
+    source: String,
     onApply: (OfferDto) -> Unit
 ) {
     val context = LocalContext.current
+    var showErrorMessage by remember { mutableStateOf(false) }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(top = 24.dp, start = 5.dp)
     ) {
@@ -80,17 +89,15 @@ fun JobDescriptionScreen(
         )
         Spacer(modifier = Modifier.height(10.dp))
         Column(modifier = Modifier.fillMaxWidth()) {
-            offer.requirementSkills.forEach { skill ->
-                Text(
-                    text = ". $skill",
-                    modifier = Modifier.padding(start = 6.dp),
-                    fontFamily = LibreBaskerVilleBold,
-                    fontWeight = FontWeight.W400,
-                    color = GrayFont,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
+            Text(
+                text = ". ${offer.requirementSkills}",
+                modifier = Modifier.padding(start = 6.dp),
+                fontFamily = LibreBaskerVilleBold,
+                fontWeight = FontWeight.W400,
+                color = GrayFont,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center
+            )
         }
 
         //Education
@@ -170,8 +177,12 @@ fun JobDescriptionScreen(
             }
         )
         DetailRow(label = stringResource(R.string.website), value = offer.website ?: "") { link ->
-            val intent = Intent(Intent.ACTION_VIEW, link.toUri())
-            context.startActivity(intent)
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, link.toUri())
+                context.startActivity(intent)
+            }catch (e: Exception){
+                showErrorMessage = true
+            }
         }
 
         //Company Description
@@ -195,19 +206,25 @@ fun JobDescriptionScreen(
             textAlign = TextAlign.Start
         )
 
-        //  APPLY BUTTON
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            AppButton(
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .padding(top = 15.dp, bottom = 10.dp),
-                text = if (offer.isApplied) stringResource(R.string.applied) else stringResource(R.string.apply),
-                isEnable = !offer.isApplied
-            ) {
-                if (!offer.isApplied)
-                    onApply(offer)
+        if (source != Screen.EstablishmentApplicationStatus.route){
+            //  APPLY BUTTON
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                AppButton(
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .padding(top = 15.dp, bottom = 10.dp),
+                    text = if (offer.isApplied) stringResource(R.string.applied) else stringResource(R.string.apply),
+                    isEnable = !offer.isApplied
+                ) {
+                    if (!offer.isApplied)
+                        onApply(offer)
+                }
             }
         }
+    }
+    if (showErrorMessage){
+        showErrorMessage = false
+        CustomMessage.Show(message = stringResource(R.string.error_occurred))
     }
 
 }

@@ -25,16 +25,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.screens.onboarding.components.HorizontalPagerIndicator
 import com.example.stageconnect.presentation.screens.onboarding.components.OnboardingPageItem
 import com.example.stageconnect.presentation.screens.onboarding.onboardingPages
+import com.example.stageconnect.presentation.screens.signin.viewmodels.SignInViewModel
 import com.example.stageconnect.ui.theme.Blue
 import kotlinx.coroutines.launch
 
 @Composable
 fun OnboardingScreen(
     modifier: Modifier,
+    signInViewModel: SignInViewModel = hiltViewModel(),
     onFinish: () -> Unit
 ) {
     val pages = onboardingPages
@@ -71,6 +74,7 @@ fun OnboardingScreen(
                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
                 }
             } else {
+                signInViewModel.saveOnBoarding(true)
                 onFinish()
             }
         }

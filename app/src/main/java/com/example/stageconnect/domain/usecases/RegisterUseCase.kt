@@ -2,6 +2,8 @@ package com.example.stageconnect.domain.usecases
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import com.example.stageconnect.data.dtos.AuthDto
 import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.data.remote.repository.RegisterRepository
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,10 +18,10 @@ class RegisterUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    suspend fun execute(userDto: UserDto, imageUri: Uri?): String {
+    suspend fun execute(authDto: AuthDto, imageUri: Uri?): String {
         // Serialize the UserDto to JSON string
         val objectMapper = ObjectMapper()
-        val userDtoJson = objectMapper.writeValueAsString(userDto)
+        val authDtoJson = objectMapper.writeValueAsString(authDto)
 
         // Correctly convert Uri to real File
         val file: File = if (imageUri != null){
@@ -30,7 +32,7 @@ class RegisterUseCase @Inject constructor(
 
 
         // Call the repository to register the user
-        return registerRepository.registerUser(userDtoJson, file)
+        return registerRepository.registerUser(authDtoJson, file)
     }
 
     private fun uriToFile(context: Context, uri: Uri): File {

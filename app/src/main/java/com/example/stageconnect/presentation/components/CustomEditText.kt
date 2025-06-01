@@ -70,7 +70,7 @@ fun CustomEditText(
 ) {
     //to control data reset from outside
     resetText.value = defaultText
-    var text = resetText.value
+    var text by remember { mutableStateOf(resetText.value) }
     
     var listClicked by remember { mutableStateOf(false) }
     var isDatePickerDialogOpen by remember { mutableStateOf(false) }

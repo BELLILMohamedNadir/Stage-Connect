@@ -13,6 +13,8 @@ data class OfferDto(
     val experience: String,
     val keySkills: List<String>,
     val requirementSkills: String,
+    val startDate: String? = null,
+    val endDate: String? = null,
     val jobDescription: String,
     val companyDescription: String?,
     val workType: String,

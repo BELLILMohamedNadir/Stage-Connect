@@ -5,6 +5,7 @@ import com.example.stageconnect.data.dtos.AuthenticationRequest
 import com.example.stageconnect.data.dtos.AuthenticationResponse
 import com.example.stageconnect.data.dtos.CertificationDto
 import com.example.stageconnect.data.dtos.EducationDto
+import com.example.stageconnect.data.dtos.EstablishmentDto
 import com.example.stageconnect.data.dtos.EstablishmentsDto
 import com.example.stageconnect.data.dtos.InternshipDto
 import com.example.stageconnect.data.dtos.LanguageDto
@@ -62,11 +63,27 @@ interface ApiService {
         @Path("id") id: Long,
     ): List<ApplicationDto>
 
+    @GET("api/establishment/students/{id}")
+    suspend fun getEstablishmentStudents(
+        @Path("id") id: Long,
+    ): List<StudentDto>
+
+    @GET("api/application/establishment/{id}")
+    suspend fun getEstablishmentApplications(
+        @Path("id") id: Long,
+    ): List<ApplicationDto>
+
     @DELETE("api/application/{applicationId}/{studentId}")
     suspend fun deleteApplication(
         @Path("applicationId") applicationId: Long,
         @Path("studentId") studentId: Long
     ): Response<Unit>
+
+    @PUT("api/application/{id}")
+    suspend fun updateApplication(
+        @Path("id") id: Long,
+        @Body applicationDto: ApplicationDto
+    ): ApplicationDto
 
     @POST("api/offer/save/{offerId}/{studentId}")
     suspend fun saveOffer(@Path("offerId") offerId :Long, @Path("studentId") studentId: Long): Response<Unit>
@@ -151,6 +168,14 @@ interface ApiService {
         @Part("recruiterDto") recruiterDtoJson: RequestBody,
         @Part file: MultipartBody.Part
     ): RecruiterDto
+
+    @Multipart
+    @POST("api/establishment")
+    suspend fun updateEstablishment(
+        @Part("establishmentDto") establishmentDtoJson: RequestBody,
+        @Part file: MultipartBody.Part
+    ): EstablishmentDto
+
 
     @POST("api/student/skills/{studentId}")
     suspend fun addSkills(

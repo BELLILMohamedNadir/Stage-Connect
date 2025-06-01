@@ -58,6 +58,7 @@ fun CustomOfferCard(
     offerDto: OfferDto,
     isSaveIconDisable: Boolean = false,
     showLabel: Boolean = false,
+    showSaveIcon: Boolean = true,
     showDate: Boolean = false,
     offerViewModel: OfferViewModel = hiltViewModel(),
     onSavedClick: (OfferDto) -> Unit = {},
@@ -163,31 +164,33 @@ fun CustomOfferCard(
                             )
                         }
                     }
-                    IconButton(onClick = {
-                        if (!isSaveIconDisable) {
-                            if (!isLoading.value) {
-                                offerViewModel.saveOffer(
-                                    offerDto,
-                                    savedOfferMessage,
-                                    unSavedOfferMessage,
-                                    context
-                                )
+                    if (showSaveIcon){
+                        IconButton(onClick = {
+                            if (!isSaveIconDisable) {
+                                if (!isLoading.value) {
+                                    offerViewModel.saveOffer(
+                                        offerDto,
+                                        savedOfferMessage,
+                                        unSavedOfferMessage,
+                                        context
+                                    )
+                                }
+                                savedIcon = if (offerDto.isSaved)
+                                    R.drawable.ic_save_filled
+                                else
+                                    R.drawable.ic_save
+                            } else {
+                                savedIcon = R.drawable.ic_save_filled
                             }
-                            savedIcon = if (offerDto.isSaved)
-                                R.drawable.ic_save_filled
-                            else
-                                R.drawable.ic_save
-                        } else {
-                            savedIcon = R.drawable.ic_save_filled
-                        }
-                        onSavedClick(offerDto)
-                    }) {
-                        Icon(
-                            painter = painterResource(savedIcon),
-                            contentDescription = "saved icon",
-                            tint = Color.Unspecified
-                        )
+                            onSavedClick(offerDto)
+                        }) {
+                            Icon(
+                                painter = painterResource(savedIcon),
+                                contentDescription = "saved icon",
+                                tint = Color.Unspecified
+                            )
 //                        onSavedClick(offerDto)
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
@@ -217,7 +220,7 @@ fun CustomOfferCard(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "${offerDto.salaryStart} - ${offerDto.salaryEnd} £",
+                            text = "${offerDto.salaryStart}€ - ${offerDto.salaryEnd}€",
                             fontFamily = LibreBaskerVilleBold,
                             fontWeight = FontWeight.W500,
                             fontSize = 12.sp,

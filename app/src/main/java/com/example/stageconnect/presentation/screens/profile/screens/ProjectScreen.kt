@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,19 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
-import com.example.stageconnect.data.dtos.InternshipDto
 import com.example.stageconnect.data.dtos.ProjectDto
 import com.example.stageconnect.domain.DateComparator
-import com.example.stageconnect.domain.model.enums.Education
 import com.example.stageconnect.presentation.components.AppButton
-import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
 import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.components.CustomTextArea
 import com.example.stageconnect.presentation.components.CustomToggleSwitch
-import com.example.stageconnect.presentation.components.ErrorMessage
-import com.example.stageconnect.presentation.components.NotFound
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
-import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProjectViewModel
 import com.example.stageconnect.ui.theme.GrayFont
 
@@ -48,12 +42,12 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                   onNext: () -> Unit
 ) {
     val inputFields = listOf(
-        stringResource(R.string.project_name),
-        stringResource(R.string.role_),
-        stringResource(R.string.from),
-        stringResource(R.string.current),
-        stringResource(R.string.description_optional),
-        stringResource(R.string.project_url_optional),
+        R.string.project_name,
+        R.string.role_,
+        R.string.from,
+        R.string.current,
+        R.string.description_optional,
+        R.string.project_url_optional,
     )
 
     val projectName = rememberSaveable { mutableStateOf("") }
@@ -67,9 +61,9 @@ fun ProjectScreen(modifier: Modifier = Modifier,
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
     val stateMap = mapOf(
-        stringResource(R.string.project_name) to projectName,
-        stringResource(R.string.role_) to role,
-        stringResource(R.string.project_url_optional) to projectUrl,
+        R.string.project_name to projectName,
+        R.string.role_ to role,
+        R.string.project_url_optional to projectUrl,
     )
 
     val createProjectResult by projectViewModel.createProjectResult.observeAsState()
@@ -83,7 +77,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -96,7 +90,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                 inputFields.forEach { label ->
 
                     when (label) {
-                        stringResource(R.string.description_optional) -> {
+                        R.string.description_optional -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -111,7 +105,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.from) -> {
+                        R.string.from -> {
                             Row(modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween) {
@@ -149,7 +143,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                             }
                         }
 
-                        stringResource(R.string.current) -> {
+                        R.string.current -> {
                             Column (
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
@@ -165,11 +159,11 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                                 horizontalAlignment = Alignment.Start
                             ){
-                                Text(text = label, color = GrayFont, fontSize = 14.sp,
+                                Text(text = stringResource(label), color = GrayFont, fontSize = 14.sp,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
-                                    label = label,
+                                    label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
                                 )
@@ -199,7 +193,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
     }
     if (showErrorMessage){
         showErrorMessage = false
-        ErrorMessage.Show(stringResource(R.string.add_necessary_data))
+        CustomMessage.Show(stringResource(R.string.add_necessary_data))
     }
 }
 

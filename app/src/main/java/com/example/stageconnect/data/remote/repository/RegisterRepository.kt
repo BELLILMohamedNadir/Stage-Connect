@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 // Repository Interface
 interface RegisterRepository {
-    suspend fun registerUser(userDtoJson: String, file: File): String
+    suspend fun registerUser(authDtoJson: String, file: File): String
 }
 
 // Repository Implementation
@@ -19,8 +19,8 @@ class RegisterRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : RegisterRepository {
 
-    override suspend fun registerUser(userDtoJson: String, file: File): String {
-        val userDtoRequestBody = userDtoJson.toRequestBody("text/plain".toMediaTypeOrNull())
+    override suspend fun registerUser(authDtoJson: String, file: File): String {
+        val userDtoRequestBody = authDtoJson.toRequestBody("text/plain".toMediaTypeOrNull())
 
         val imagePart = file.let {
             val requestBody = it.asRequestBody("image/*".toMediaTypeOrNull())

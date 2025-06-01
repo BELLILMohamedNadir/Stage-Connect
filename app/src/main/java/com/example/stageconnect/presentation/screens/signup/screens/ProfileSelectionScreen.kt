@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,7 +39,9 @@ import com.example.stageconnect.ui.theme.ReemKufiInkRegular
 @Composable
 fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                            registerViewModel: RegisterViewModel,
-                           onNext: () -> Unit) {
+                           onExpertiseScreenNavigate: () -> Unit,
+                           onUserInformationScreenNavigate: () -> Unit,
+                           ) {
     var role by remember { mutableStateOf(ROLE.STUDENT) }
 
     Column(
@@ -74,7 +77,7 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween) {
-            var selectedIndex by remember { mutableStateOf(1) }
+            var selectedIndex by remember { mutableIntStateOf(registerViewModel.getSelectedIndex()) }
             CustomCardView(
                 index = 1,
                 selectedIndex = selectedIndex == 1,
@@ -83,6 +86,7 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                 description = stringResource(R.string.i_want_to_find_an_internship)
             ) {
                 selectedIndex = 1
+                registerViewModel.setSelectedIndex(selectedIndex)
                 role = ROLE.STUDENT
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,6 +98,7 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                 description = stringResource(R.string.i_want_to_find_interns)
             ) {
                 selectedIndex = 2
+                registerViewModel.setSelectedIndex(selectedIndex)
                 role = ROLE.RECRUITER
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -105,13 +110,18 @@ fun ProfileSelectionScreen(modifier: Modifier = Modifier,
                 description = stringResource(R.string.i_am_an_interns_supervisor)
             ) {
                 selectedIndex = 3
+                registerViewModel.setSelectedIndex(selectedIndex)
                 role = ROLE.ESTABLISHMENT
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
         AppButton(text = stringResource(R.string.continue_)) {
             registerViewModel.setRole(role)
-            onNext()
+            if (role == ROLE.STUDENT){
+                onExpertiseScreenNavigate()
+            }else{
+                onUserInformationScreenNavigate()
+            }
         }
     }
 }

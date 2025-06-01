@@ -37,8 +37,8 @@ fun CustomCardWithCheckbox(modifier: Modifier = Modifier,
                        },
         verticalAlignment = Alignment.CenterVertically
     ){
-        CustomCheckbox(isEnabled = false, isChecked = selectedIndex, label = label, textColor = GrayFont){
-
+        CustomCheckbox(isChecked = selectedIndex, label = label, textColor = GrayFont){
+            onClick()
         }
     }
 }

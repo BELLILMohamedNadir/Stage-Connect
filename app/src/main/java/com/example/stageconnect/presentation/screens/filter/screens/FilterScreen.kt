@@ -37,13 +37,16 @@ import com.example.stageconnect.presentation.components.CustomCircularProgressIn
 import com.example.stageconnect.presentation.screens.filter.components.CustomFilterCard
 import com.example.stageconnect.presentation.screens.filter.components.CustomRadioFilterCard
 import com.example.stageconnect.presentation.screens.filter.components.LocationSalaryFilterCard
+import com.example.stageconnect.presentation.screens.filter.viewmodel.FilterViewModel
 import com.example.stageconnect.ui.theme.BackgroundGray_
 import com.example.stageconnect.ui.theme.Blue
 import com.example.stageconnect.ui.theme.SoftBlue
 import kotlinx.coroutines.delay
 
 @Composable
-fun FilterScreen(modifier: Modifier = Modifier) {
+fun FilterScreen(modifier: Modifier = Modifier,
+                 filterViewModel: FilterViewModel,
+                 onNavigate: () -> Unit) {
     // Define a list of search criteria that will be used to filter items in the UI.
     val criterion: List<SearchCriterion> = listOf(
         SearchCriterion.LocationAndSalaryCriterion(),
@@ -74,7 +77,7 @@ fun FilterScreen(modifier: Modifier = Modifier) {
 
     // Default value for the salary filter, which is per month.
     val defaultValue = stringResource(R.string.per_month)
-    val salary by remember { mutableStateOf(defaultValue) }
+    var salary by remember { mutableStateOf(defaultValue) }
 
     // State to store and reset search text input.
     val resetSearchText = remember { mutableStateOf("") }
@@ -90,6 +93,50 @@ fun FilterScreen(modifier: Modifier = Modifier) {
 
     // Get the context for showing Toast messages.
     val context = LocalContext.current
+
+
+
+    LaunchedEffect(Unit) {
+        val savedMap = filterViewModel.criteria.value
+
+        // Restore checkbox states
+        criterion.forEachIndexed { index, crit ->
+            val saved = savedMap[crit.name]
+            if (saved != null && crit !is SearchCriterion.LocationAndSalaryCriterion && crit !is SearchCriterion.WorkTypeCriterion) {
+                val map = checkboxStates.getOrPut(index) { initializeCheckboxSubMap(crit) }
+                saved.forEach { label ->
+                    map[label]?.value = true
+                }
+                checkedItems[crit.name] = saved.toMutableList()
+            }
+        }
+
+        // Restore location and salary
+        savedMap["Location"]?.firstOrNull()?.let {
+            location = it
+        }
+
+        savedMap["SalaryRange"]?.firstOrNull()?.let {
+            val rangeParts = it.replace("€", "").split("-").mapNotNull { part -> part.trim().toIntOrNull() }
+            if (rangeParts.size == 2) {
+                salaryRange = rangeParts[0].toFloat()..rangeParts[1].toFloat()
+            }
+        }
+
+        savedMap["salaryUnit"]?.firstOrNull()?.let {
+            salary = it
+        }
+
+        // Restore radio selection
+        val workTypeCriterion = criterion.indexOfFirst { it is SearchCriterion.WorkTypeCriterion }
+        if (workTypeCriterion != -1) {
+            savedMap[criterion[workTypeCriterion].name]?.firstOrNull()?.let {
+                selectedRadioButtonOption.value = it
+            }
+        }
+
+    }
+
 
 
     // Conditionally show the content only when the screen is ready.
@@ -133,6 +180,9 @@ fun FilterScreen(modifier: Modifier = Modifier) {
                             onLocationChange = { location = it },
                             salaryRange = initialRange,
                             currentRange = salaryRange,
+                            onSalaryTypeChange = {
+                                salary = it
+                            },
                             onSalaryChange = {
                                 salaryRange = it
                                 // Update selected salary range in checkedItems.
@@ -211,17 +261,36 @@ fun FilterScreen(modifier: Modifier = Modifier) {
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Apply button: Shows the number of selected filters.
                 AppButton(
                     modifier = Modifier.weight(1f),
                     text = stringResource(R.string.apply),
                     fontWeight = FontWeight.Bold
                 ) {
-                    // Flatten the selected items and show a Toast with the count.
-                    val selectedItems = checkedItems.values.flatten().toMutableList()
-                    if (salary.isNotEmpty()) selectedItems.add(salary)
-                    if (location.isNotEmpty()) selectedItems.add(location)
-                    Toast.makeText(context, "${selectedItems.size} items selected", Toast.LENGTH_SHORT).show()
+//                    val selectedItems = checkedItems.values.flatten().toMutableList()
+//                    if (salary.isNotEmpty()) selectedItems.add(salary)
+//                    if (location.isNotEmpty()) selectedItems.add(location)
+//                    Toast.makeText(context, "${selectedItems.size} items selected", Toast.LENGTH_SHORT).show()
+                    val finalFilterMap = mutableMapOf<String, List<String>>()
+
+                    // Copy all selected checkbox and radio values
+                    checkedItems.forEach { (criterion, selectedList) ->
+                        if (selectedList.isNotEmpty()) {
+                            finalFilterMap[criterion] = selectedList.toList()
+                        }
+                    }
+
+                    // Add location if filled
+                    if (location.isNotEmpty()) {
+                        finalFilterMap["Location"] = listOf(location)
+                    }
+
+                    // Add salary range
+                    finalFilterMap["SalaryRange"] = listOf("${salaryRange.start.toInt()} - ${salaryRange.endInclusive.toInt()} €")
+
+                    finalFilterMap["salaryUnit"] = listOf(salary)
+
+                    filterViewModel.setCriteria(finalFilterMap)
+                    onNavigate()
                 }
             }
         }

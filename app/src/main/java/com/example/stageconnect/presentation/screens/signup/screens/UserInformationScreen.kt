@@ -19,7 +19,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,12 +37,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.stageconnect.R
+import com.example.stageconnect.data.dtos.AuthDto
 import com.example.stageconnect.data.dtos.EstablishmentsDto
 import com.example.stageconnect.data.dtos.UserDto
+import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.CustomEditText
 import com.example.stageconnect.presentation.screens.signup.viewmodels.RegisterViewModel
 import com.example.stageconnect.domain.result.Result
+import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 
 
@@ -58,13 +60,14 @@ fun UserInformationScreen(modifier: Modifier = Modifier,
         stringResource(R.string.first_name) to -1,
         stringResource(R.string.middle_or_last_name) to -1,
         stringResource(R.string.date_of_birth) to R.drawable.ic_calender,
-        stringResource(R.string.university) to R.drawable.ic_university,
+        stringResource(R.string.university) to R.drawable.ic_university_bottom_navigation,
         stringResource(R.string.phone_number) to R.drawable.ic_phone,
         stringResource(R.string.gender) to R.drawable.ic_polygon
     )
 
     val imageUri by viewModel.imageUri
 
+    val errorMessage = stringResource(R.string.add_necessary_data)
     val male = stringResource(R.string.male)
     val context = LocalContext.current
     val isLoading = remember { mutableStateOf(false) }
@@ -85,40 +88,34 @@ fun UserInformationScreen(modifier: Modifier = Modifier,
     val registerResult by registerViewModel.registerResult.observeAsState()
     val getAllEstablishmentResult by registerViewModel.getAllEstablishmentResult.observeAsState()
 
-    registerResult?.let { result ->
-        when (result) {
-            is Result.Loading -> {
-                isLoading.value = true
-            }
-
-            is Result.Success -> {
-                isLoading.value = false
-                registerViewModel.clearData()
-                onNext()
-            }
-
-            is Result.Error -> {
-                isLoading.value = false
-                Toast.makeText(context, "Error occurred, try again", Toast.LENGTH_SHORT).show()
-            }
+    ObserveResult(
+        result = registerResult,
+        onLoading = {
+            isLoading.value = true
+        },
+        onSuccess = {
+            isLoading.value = false
+            registerViewModel.clearData()
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            Toast.makeText(context, "Error occurred, try again", Toast.LENGTH_SHORT).show()
         }
-    }
+    )
 
-    getAllEstablishmentResult?.let { result ->
-        when (result) {
-            is Result.Loading -> {
-
-            }
-
-            is Result.Success -> {
-                establishments.addAll(result.data)
-            }
-
-            is Result.Error -> {
-                Toast.makeText(context, "Error occurred, try again", Toast.LENGTH_SHORT).show()
-            }
+    ObserveResult(
+        result = getAllEstablishmentResult,
+        onLoading = {
+        },
+        onSuccess = {result ->
+            establishments.addAll(result)
+        },
+        onError = {
+            Toast.makeText(context, "Error occurred, There is no establishment", Toast.LENGTH_SHORT).show()
         }
-    }
+    )
+
 
     LaunchedEffect(Unit) {
         if (getAllEstablishmentResult == null || getAllEstablishmentResult !is Result.Success) {
@@ -171,14 +168,16 @@ fun UserInformationScreen(modifier: Modifier = Modifier,
                     CustomEditText(label = label, trailingIcon = icon, imeAction = ImeAction.Next, keyboardType = KeyboardType.Number) { phoneNumber = it}
                 }
                 stringResource(R.string.university) -> {
-                    CustomEditText(
-                        label = label,
-                        establishmentList = establishments,
-                        hasEstablishmentList = true,
-                        trailingIcon = icon,
-                        onEstablishmentValueChange = {
-                            establishmentId = it
-                        }) {
+                    if (registerViewModel.getRole() == ROLE.STUDENT){
+                        CustomEditText(
+                            label = label,
+                            establishmentList = establishments,
+                            hasEstablishmentList = true,
+                            trailingIcon = icon,
+                            onEstablishmentValueChange = {
+                                establishmentId = it
+                            }) {
+                        }
                     }
                 }
                 stringResource(R.string.first_name) -> {
@@ -191,23 +190,40 @@ fun UserInformationScreen(modifier: Modifier = Modifier,
         }
 
         AppButton(text = stringResource(R.string.continue_), isLoading = isLoading) {
-            if (establishmentId != -1L){
-                val userDto = UserDto(
-                    name =  name,
-                    firstName =  firstName,
-                    dateOfBirth =  dateOfBirth,
-                    email =  registerViewModel.getEmail()!!,
-                    password =  registerViewModel.getPassword()!!,
-                    role = registerViewModel.getRole()!!,
-                    phone = phoneNumber,
-                    gender =  gender,
-                    establishmentId = establishmentId,
-                    expertises = registerViewModel.getExpertise()!!
-                )
-                registerViewModel.register(userDto, imageUri)
+            val authDto = AuthDto(
+                name =  name,
+                firstName =  firstName,
+                dateOfBirth =  dateOfBirth,
+                email =  registerViewModel.getEmail()!!,
+                password =  registerViewModel.getPassword()!!,
+                role = registerViewModel.getRole()!!,
+                phone = phoneNumber,
+                gender =  gender,
+                establishmentId = establishmentId,
+                expertises = registerViewModel.getExpertise()!!.toList()
+            )
+            if (isInfoValid(authDto = authDto, registerViewModel.getRole()!!)){
+                registerViewModel.register(authDto, imageUri)
             }else{
-                Toast.makeText(context, "Select an establishment", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+}
+fun isInfoValid(authDto: AuthDto, role: ROLE): Boolean{
+    return if (role == ROLE.STUDENT){
+        (authDto.establishmentId != -1L
+                && (authDto.name?:"").isNotBlank()
+                && (authDto.firstName?:"").isNotBlank()
+                && (authDto.dateOfBirth?:"").isNotBlank()
+                && (authDto.phone?:"").isNotBlank()
+                && (authDto.gender?:"").isNotBlank())
+    }else{
+        ((authDto.name?:"").isNotBlank()
+                && (authDto.firstName?:"").isNotBlank()
+                && (authDto.dateOfBirth?:"").isNotBlank()
+                && (authDto.phone?:"").isNotBlank()
+                && (authDto.gender?:"").isNotBlank())
     }
 }

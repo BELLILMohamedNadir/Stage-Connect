@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.signin
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +17,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -27,11 +30,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stageconnect.R
 import com.example.stageconnect.data.dtos.AuthenticationRequest
+import com.example.stageconnect.domain.CONSTANT
 import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.presentation.components.AppButton
 import com.example.stageconnect.presentation.components.AppLogo
 import com.example.stageconnect.presentation.components.CustomCheckbox
-import com.example.stageconnect.presentation.components.ErrorMessage
+import com.example.stageconnect.presentation.components.CustomMessage
 import com.example.stageconnect.presentation.components.ObserveResult
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
 import com.example.stageconnect.presentation.screens.signin.component.CustomEditText
@@ -44,22 +48,32 @@ fun SignInScreen(modifier: Modifier = Modifier,
                  onForgetPassword: () -> Unit,
                  onStudentSignIn: () -> Unit,
                  onRecruiterSignIn: () -> Unit,
+                 onEstablishmentSignIn: () -> Unit,
                  onSignUp: () -> Unit,
                  onSignUpWithGoogle: () -> Unit,
                  signInViewModel: SignInViewModel = hiltViewModel(),
                  profileViewModel: ProfileViewModel,
                  registerViewModel: RegisterViewModel
 ) {
-    val email = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf(signInViewModel.getInfo(CONSTANT.EMAIL)) }
+    val password = remember { mutableStateOf(signInViewModel.getInfo(CONSTANT.PASSWORD)) }
     val isLoading = remember { mutableStateOf(false) }
+    var showErrorMessage by remember { mutableStateOf(false) }
+    val isChecked = remember { mutableStateOf(signInViewModel.checked(CONSTANT.CHECKED)) }
 
     val authenticationResult by signInViewModel.authenticationResult.observeAsState()
+
+    val errorMessage = stringResource(R.string.add_email_password)
 
     ObserveResult(
         result = authenticationResult,
         onLoading = {isLoading.value = true},
         onSuccess = {
+            if (isChecked.value){
+                signInViewModel.saveInfos(email = email.value, password = password.value, checked = isChecked.value)
+            }else{
+                signInViewModel.saveInfos(email = "", password = "", checked = false)
+            }
             isLoading.value = false
             if (it.role == ROLE.STUDENT.name){
                 profileViewModel.setStudent(it)
@@ -69,12 +83,15 @@ fun SignInScreen(modifier: Modifier = Modifier,
                 if (it.role == ROLE.RECRUITER.name){
                     profileViewModel.setRecruiter(it)
                     onRecruiterSignIn()
+                }else{
+                    profileViewModel.setEstablishment(it)
+                    onEstablishmentSignIn()
                 }
             }
         },
         onError = {
             isLoading.value = false
-            ErrorMessage.Show(stringResource(R.string.error_occurred))
+            CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
 
@@ -109,9 +126,10 @@ fun SignInScreen(modifier: Modifier = Modifier,
             //Checkbox
             CustomCheckbox(
                 modifier = Modifier.padding(horizontal = 15.dp),
+                isChecked = isChecked.value,
                 label = stringResource(R.string.remember_me)
             ){
-
+                isChecked.value = it
             }
             Spacer(modifier = Modifier.height(20.dp))
             //sign in button
@@ -147,10 +165,12 @@ fun SignInScreen(modifier: Modifier = Modifier,
                     color = BlueFont,
                     fontWeight = FontWeight.W500,
                     modifier = Modifier.clickable {
-                        if (email.value.isNotEmpty() && password.value.isNotEmpty()){
+                        if (email.value.isNotBlank() && password.value.isNotBlank()){
                             registerViewModel.setEmail(email.value.trim())
                             registerViewModel.setPassword(password.value.trim())
                             onSignUp()
+                        }else{
+                            showErrorMessage = true
                         }
                     }
                 )
@@ -209,5 +229,10 @@ fun SignInScreen(modifier: Modifier = Modifier,
                 onSignUpWithGoogle()
             }
         }
+    }
+
+    if (showErrorMessage){
+        showErrorMessage = false
+        CustomMessage.Show(message = errorMessage)
     }
 }

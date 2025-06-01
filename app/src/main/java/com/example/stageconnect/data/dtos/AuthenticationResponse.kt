@@ -14,6 +14,8 @@ data class AuthenticationResponse(
     val phone: String,
     val resume: String,
     val gender: String?,
+    val summary: String?,
+    val organizationName: String?,
     val photo: String,
     val currentPosition: String?,
     val token: String,

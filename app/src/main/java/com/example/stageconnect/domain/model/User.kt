@@ -1,25 +1,27 @@
 package com.example.stageconnect.domain.model
 
+import androidx.room.Entity
 import com.example.stageconnect.R
+import com.example.stageconnect.domain.model.enums.ROLE
 
+@Entity(tableName = "user")
 data class User(
-    var name:String,
-    var firstName:String,
-    var middleName:String,
-    var dateOfBirth:String,
-    var gender:String,
-    var photo: Int = R.drawable.img_user,
-    var currentPosition:String,
-    var address:String,
-    var phone:String,
-    var email:String,
-    var summary:String,
-    var workExperiences: List<WorkExperience>,
-    var educations: List<Education>,
-    var projects: List<Project>,
-    var certifications: List<Certification>,
-    var internships: List<Internship>,
-    var languages: List<Language>,
-    var skills : List<Skill>,
-    var resumesPath: List<String>
+    var id: Long? = null,
+    var name: String? = null,
+    var firstName: String? = null,
+    var dateOfBirth: String? = null,
+    var email: String? = null,
+    var password: String? = null,
+    var role: ROLE? = null,
+    var phone: String? = null,
+    var photo: String? = null,
+    var resume: String? = null,
+    var gender: String? = null,
+    var address: String? = null,
+    var establishmentId: Long? = null,
+    var summary: String? = null,
+    var currentPosition: String? = null,
+    var organizationName: String? = null,
+    var skills: List<String>? = null,
+    var expertises: List<String>? = null
 )

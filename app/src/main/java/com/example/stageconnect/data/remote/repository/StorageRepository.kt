@@ -15,4 +15,12 @@ class StorageRepository @Inject constructor(
     fun get(label: String): String? {
         return encryptedPrefs.getString(label, null)
     }
+
+    fun saveBoolean(data: Boolean, label: String) {
+        encryptedPrefs.edit() { putBoolean(label, data) }
+    }
+
+    fun getBoolean(label: String): Boolean {
+        return encryptedPrefs.getBoolean(label, false)
+    }
 }

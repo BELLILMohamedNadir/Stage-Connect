@@ -106,7 +106,7 @@ fun CustomKeySkillsCard(
                 withDoneClick = true,
                 onDoneAction = { newSkill ->
                     if (newSkill.isNotBlank()) {
-                        skills.value += newSkill
+                        skills.value += newSkill.trim()
                         onListChange(skills.value)
                     }
                 }

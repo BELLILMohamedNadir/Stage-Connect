@@ -36,43 +36,108 @@ import com.example.stageconnect.ui.theme.GrayFont
 import com.example.stageconnect.ui.theme.GreenFont
 import com.example.stageconnect.ui.theme.RedBackground
 import com.example.stageconnect.ui.theme.RedFont
+import com.google.accompanist.placeholder.material.placeholder
+
 
 @Composable
-fun CustomFileCard(modifier: Modifier = Modifier,
-                   context: Context,
-                   uri: Uri?,
-                   isApplication: Boolean = false,
-                   onDeleteClick: (Uri) -> Unit,
-                   onItemClick: (Uri) -> Unit) {
-    uri?.let {
-        FileUtils.getFileNameAndSize(context, it)?.let { (title, size) ->
+fun CustomFileCard(
+    modifier: Modifier = Modifier,
+    context: Context,
+    uri: Uri?,
+    isApplication: Boolean = false,
+    isLoading: Boolean = false,
+    onDeleteClick: (Uri) -> Unit,
+    onItemClick: (Uri) -> Unit
+) {
+    if (isLoading || uri == null) {
+        // Show shimmer placeholder
         Row(
-            modifier = modifier.fillMaxWidth(fraction = 1f)
-                .height(if (isApplication) 70.dp else 80.dp)
+            modifier = modifier
+                .fillMaxWidth()
+                .height(80.dp)
                 .clip(RoundedCornerShape(15.dp))
-                .background(color = if (isApplication) BackgroundGray else RedBackground, shape = RoundedCornerShape(15.dp))
-                .clickable { onItemClick(uri) }
+                .background(BackgroundGray)
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row (modifier = Modifier.padding(horizontal = 10.dp).weight(1f)){
-                Icon(painter = painterResource(R.drawable.ic_pdf),
-                    contentDescription = "pdf icon",
-                    tint = if (isApplication) Blue else Color.Unspecified)
-                Spacer(modifier = Modifier.width(10.dp))
-                Column(
-                    horizontalAlignment = Alignment.Start) {
-                    Text(text = title, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.SemiBold, overflow = TextOverflow.Ellipsis)
-                    Text(text = "$size Kb", fontSize = 12.sp, color = GrayFont, overflow = TextOverflow.Ellipsis)
-                }
+            Spacer(
+                modifier = Modifier
+                    .size(40.dp)
+                    .placeholder(visible = true)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
+                        .fillMaxWidth(0.6f)
+                        .placeholder(visible = true)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(
+                    modifier = Modifier
+                        .height(12.dp)
+                        .fillMaxWidth(0.3f)
+                        .placeholder(visible = true)
+                )
             }
-            if (!isApplication){
-                IconButton(onClick = {onDeleteClick(uri)}, modifier = Modifier.size(16.dp)) {
-                    Icon(painter = painterResource(R.drawable.ic_close), contentDescription = "close icon", tint = RedFont)
+        }
+    } else {
+        FileUtils.getFileNameAndSize(context, uri)?.let { (title, size) ->
+            Row(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(
+                        color = if (isApplication) BackgroundGray else RedBackground,
+                        shape = RoundedCornerShape(15.dp)
+                    )
+                    .clickable { onItemClick(uri) }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .weight(1f)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_pdf),
+                        contentDescription = "pdf icon",
+                        tint = if (isApplication) Blue else Color.Unspecified
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(
+                            text = title,
+                            fontSize = 16.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "$size Kb",
+                            fontSize = 12.sp,
+                            color = GrayFont,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                if (!isApplication) {
+                    IconButton(
+                        onClick = { onDeleteClick(uri) },
+                        modifier = Modifier.size(16.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_close),
+                            contentDescription = "close icon",
+                            tint = RedFont
+                        )
+                    }
                 }
             }
         }
-    }
     }
 }
