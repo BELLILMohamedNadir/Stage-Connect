@@ -14,6 +14,9 @@ import javax.inject.Inject
 // Repository Interface
 interface WorkExperienceRepository {
     suspend fun createWorkExperience(workExperienceDto: WorkExperienceDto): WorkExperienceDto
+    suspend fun getAllWorkExperiences(id: Long): List<WorkExperienceDto>
+    suspend fun updateWorkExperience(id: Long, workExperienceDto: WorkExperienceDto): WorkExperienceDto
+    suspend fun deleteWorkExperience(id: Long)
 }
 
 // Repository Implementation
@@ -22,6 +25,21 @@ class WorkExperienceRepositoryImpl @Inject constructor(
 ) : WorkExperienceRepository {
     override suspend fun createWorkExperience(workExperienceDto: WorkExperienceDto): WorkExperienceDto {
         return apiService.createWorkExperience(workExperienceDto)
+    }
+
+    override suspend fun getAllWorkExperiences(id: Long): List<WorkExperienceDto> {
+        return apiService.getWorkExperiences(id)
+    }
+
+    override suspend fun updateWorkExperience(
+        id: Long,
+        workExperienceDto: WorkExperienceDto
+    ): WorkExperienceDto {
+        return apiService.updateWorkExperience(id, workExperienceDto)
+    }
+
+    override suspend fun deleteWorkExperience(id: Long) {
+        apiService.deleteWorkExperience(id)
     }
 
 }

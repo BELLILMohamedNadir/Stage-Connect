@@ -1,33 +1,18 @@
 package com.example.stageconnect.presentation.screens.establishmentstudent.viewmodels
 
-import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stageconnect.data.dtos.AuthenticationResponse
-import com.example.stageconnect.data.dtos.OfferDto
-import com.example.stageconnect.data.dtos.RecruiterDto
 import com.example.stageconnect.data.dtos.StudentDto
-import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.data.remote.repository.StorageRepository
 import com.example.stageconnect.domain.CONSTANT.USER_ID
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.DownloadFileUseCase
-import com.example.stageconnect.domain.usecases.FilterUseCase
-import com.example.stageconnect.domain.usecases.UploadFileUseCase
-import com.example.stageconnect.domain.usecases.create.AddSkillsUseCase
-import com.example.stageconnect.domain.usecases.read.GetAllEstablishmentStudentsUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateRecruiterUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateStudentUseCase
+import com.example.stageconnect.domain.usecases.filter.FilterUseCase
+import com.example.stageconnect.domain.usecases.user.GetAllEstablishmentStudentsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import okhttp3.ResponseBody
-import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel

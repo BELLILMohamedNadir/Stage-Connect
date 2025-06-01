@@ -13,10 +13,9 @@ import com.example.stageconnect.domain.CONSTANT.JWT_TOKEN
 import com.example.stageconnect.domain.CONSTANT.USER_ID
 import com.example.stageconnect.domain.CONSTANT.USER_ROLE
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.AuthenticateUseCase
+import com.example.stageconnect.domain.usecases.auth.AuthenticateUseCase
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject

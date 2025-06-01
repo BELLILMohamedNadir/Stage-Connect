@@ -16,6 +16,7 @@ import com.example.stageconnect.data.dtos.RecruiterDto
 import com.example.stageconnect.data.dtos.RoomDto
 import com.example.stageconnect.data.dtos.StudentDto
 import com.example.stageconnect.data.dtos.WorkExperienceDto
+import com.example.stageconnect.domain.model.WorkExperience
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -183,6 +184,12 @@ interface ApiService {
         @Body skills: List<String>
     ): List<String>
 
+    @PUT("api/student/skills/{studentId}")
+    suspend fun updateSkills(
+        @Path("studentId") id :Long,
+        @Body skills: List<String>
+    ): List<String>
+
     @Streaming
     @GET("api/files/{fileName}")
     suspend fun downloadFile(@Path("fileName") fileName: String): Response<ResponseBody>
@@ -200,4 +207,101 @@ interface ApiService {
         @Path("userId") userId: Long,
         @Part file: MultipartBody.Part
     ): String
+
+    @GET("api/certification/{id}")
+    suspend fun getCertifications(
+        @Path("id") id: Long,
+    ): List<CertificationDto>
+
+    @PUT("api/certification/{id}")
+    suspend fun updateCertification(
+        @Path("id") id: Long,
+        @Body certificationDto: CertificationDto
+    ): CertificationDto
+
+    @DELETE("api/certification/{id}")
+    suspend fun deleteCertification(
+        @Path("id") id: Long,
+    ): Response<Unit>
+
+    @GET("api/education/{id}")
+    suspend fun getEducations(
+        @Path("id") id: Long,
+    ): List<EducationDto>
+
+    @PUT("api/education/{id}")
+    suspend fun updateEducation(
+        @Path("id") id: Long,
+        @Body educationDto: EducationDto
+    ): EducationDto
+
+    @DELETE("api/education/{id}")
+    suspend fun deleteEducation(
+        @Path("id") id: Long,
+    ): Response<Unit>
+
+    @GET("api/internship/{id}")
+    suspend fun getInternships(
+        @Path("id") id: Long,
+    ): List<InternshipDto>
+
+    @PUT("api/internship/{id}")
+    suspend fun updateInternship(
+        @Path("id") id: Long,
+        @Body internshipDto: InternshipDto
+    ): InternshipDto
+
+    @DELETE("api/internship/{id}")
+    suspend fun deleteInternship(
+        @Path("id") id: Long,
+    ): Response<Unit>
+
+    @GET("api/project/{id}")
+    suspend fun getProjects(
+        @Path("id") id: Long,
+    ): List<ProjectDto>
+
+    @PUT("api/project/{id}")
+    suspend fun updateProject(
+        @Path("id") id: Long,
+        @Body projectDto: ProjectDto
+    ): ProjectDto
+
+    @DELETE("api/project/{id}")
+    suspend fun deleteProject(
+        @Path("id") id: Long,
+    ): Response<Unit>
+
+    @GET("api/work-experiences/{id}")
+    suspend fun getWorkExperiences(
+        @Path("id") id: Long,
+    ): List<WorkExperienceDto>
+
+    @PUT("api/work-experiences/{id}")
+    suspend fun updateWorkExperience(
+        @Path("id") id: Long,
+        @Body workExperienceDto: WorkExperienceDto
+    ): WorkExperienceDto
+
+    @DELETE("api/work-experiences/{id}")
+    suspend fun deleteWorkExperience(
+        @Path("id") id: Long,
+    ): Response<Unit>
+
+    @GET("api/language/{id}")
+    suspend fun getLanguages(
+        @Path("id") id: Long,
+    ): List<LanguageDto>
+
+    @PUT("api/language/{id}")
+    suspend fun updateLanguage(
+        @Path("id") id: Long,
+        @Body languageDto: LanguageDto
+    ): LanguageDto
+
+    @DELETE("api/language/{id}")
+    suspend fun deleteLanguage(
+        @Path("id") id: Long,
+    ): Response<Unit>
+
 }

@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +35,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun LanguageScreen(modifier: Modifier = Modifier,
-                  languageViewModel: LanguageViewModel = hiltViewModel(),
+                  languageViewModel: LanguageViewModel,
                    onNext: () -> Unit
 ) {
     val context = LocalContext.current
@@ -41,13 +43,36 @@ fun LanguageScreen(modifier: Modifier = Modifier,
     val proficiencies = context.resources.getStringArray(R.array.proficiencies_array).toList()
 
 
-    val language = remember { mutableStateOf("") }
-    val proficiency = remember { mutableStateOf("") }
+    val language = remember { mutableStateOf(languageViewModel.getLanguage()?.language?:"") }
+    val proficiency = remember { mutableStateOf(languageViewModel.getLanguage()?.proficiency?:"") }
     val isLoading = remember { mutableStateOf(false) }
     var showErrorMessage by remember { mutableStateOf(false) }
 
 
     val createLanguageResult by languageViewModel.createLanguageResult.observeAsState()
+    val updateLanguageResult by languageViewModel.updateLanguageResult.observeAsState()
+    val deleteLanguageResult by languageViewModel.deleteLanguageResult.observeAsState()
+    val deleteLanguage by languageViewModel.deleteLanguage.observeAsState()
+
+    LaunchedEffect(deleteLanguage) {
+        if (deleteLanguage == true && languageViewModel.getLanguage()?.id != null) {
+            languageViewModel.deleteLanguage(languageViewModel.getLanguage()?.id!!)
+        }
+    }
+
+    ObserveResult(
+        result = deleteLanguageResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
 
     ObserveResult(
         result = createLanguageResult,
@@ -61,6 +86,25 @@ fun LanguageScreen(modifier: Modifier = Modifier,
             CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
+
+    ObserveResult(
+        result = updateLanguageResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            languageViewModel.setLanguage(null)
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
@@ -79,6 +123,7 @@ fun LanguageScreen(modifier: Modifier = Modifier,
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                 Spacer(modifier = Modifier.height(10.dp))
                 CustomEditText(
+                    defaultText = language.value,
                     label = stringResource(R.string.language),
                     list = languages,
                     keyboardType = KeyboardType.Text,
@@ -89,6 +134,7 @@ fun LanguageScreen(modifier: Modifier = Modifier,
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                 Spacer(modifier = Modifier.height(10.dp))
                 CustomEditText(
+                    defaultText = proficiency.value,
                     label = stringResource(R.string.proficiency),
                     list = proficiencies,
                     keyboardType = KeyboardType.Text,
@@ -96,15 +142,21 @@ fun LanguageScreen(modifier: Modifier = Modifier,
                 )
             }
         }
-        AppButton(text = stringResource(R.string.save),
+        AppButton(text = if (languageViewModel.getLanguage() != null) stringResource(R.string.update) else stringResource(R.string.save),
             isLoading = isLoading) {
             val languageDto =  LanguageDto(
-                language = language.value,
-                proficiency = proficiency.value,
+                id = languageViewModel.getLanguage()?.id,
+                language = language.value.trim(),
+                proficiency = proficiency.value.trim(),
                 userId = -1
             )
-            if (languageDto.language.isNotBlank() && languageDto.proficiency.isNotBlank())
-                languageViewModel.createLanguage(languageDto)
+            if (languageDto.language.isNotBlank() && languageDto.proficiency.isNotBlank()){
+                if (languageViewModel.getLanguage() != null){
+                    languageViewModel.updateLanguage(languageDto)
+                }else{
+                    languageViewModel.createLanguage(languageDto)
+                }
+            }
             else
                 showErrorMessage = true
         }

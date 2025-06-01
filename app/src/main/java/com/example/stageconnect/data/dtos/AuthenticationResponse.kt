@@ -18,5 +18,6 @@ data class AuthenticationResponse(
     val organizationName: String?,
     val photo: String,
     val currentPosition: String?,
+    val skills: List<String>?,
     val token: String,
 )

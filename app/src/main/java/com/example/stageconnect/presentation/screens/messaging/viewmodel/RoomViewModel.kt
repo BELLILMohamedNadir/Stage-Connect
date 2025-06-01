@@ -1,6 +1,5 @@
 package com.example.stageconnect.presentation.screens.messaging.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,11 +8,10 @@ import com.example.stageconnect.data.dtos.MessageDto
 import com.example.stageconnect.data.dtos.RoomDto
 import com.example.stageconnect.data.remote.repository.StorageRepository
 import com.example.stageconnect.domain.CONSTANT.USER_ID
-import com.example.stageconnect.domain.CONSTANT.USER_ROLE
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.FilterUseCase
-import com.example.stageconnect.domain.usecases.read.GetAllMessagesUseCase
-import com.example.stageconnect.domain.usecases.read.GetAllRoomsUseCase
+import com.example.stageconnect.domain.usecases.filter.FilterUseCase
+import com.example.stageconnect.domain.usecases.messaging.GetAllMessagesUseCase
+import com.example.stageconnect.domain.usecases.messaging.GetAllRoomsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

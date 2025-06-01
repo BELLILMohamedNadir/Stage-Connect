@@ -38,4 +38,10 @@ sealed class Screen(val route: String) {
     object OfferApply : Screen("offerApply")
     object OrganizationInfo : Screen("organizationInfo")
     object OrganizationProfile : Screen("organizationProfile")
+    object WorkExperienceDetails : Screen("workExperienceDetails")
+    object CertificationDetails : Screen("certificationDetails")
+    object EducationDetails : Screen("educationDetails")
+    object InternshipDetails : Screen("internshipDetails")
+    object LanguageDetails : Screen("languageDetails")
+    object ProjectDetails : Screen("projectDetails")
 }

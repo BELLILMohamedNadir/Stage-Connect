@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +41,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun EducationScreen(modifier: Modifier = Modifier,
-                    educationViewModel: EducationViewModel = hiltViewModel(),
+                    educationViewModel: EducationViewModel,
                     onNext: () -> Unit
 ) {
 
@@ -53,15 +55,16 @@ fun EducationScreen(modifier: Modifier = Modifier,
         R.string.description_optional to emptyList(),
     )
 
-    val education = rememberSaveable { mutableStateOf("") }
-    val course = rememberSaveable { mutableStateOf("") }
-    val university = rememberSaveable { mutableStateOf("") }
-    val startDate = rememberSaveable { mutableStateOf("") }
-    val endDate = rememberSaveable { mutableStateOf("") }
-    val isGraduated = rememberSaveable { mutableStateOf(false) }
-    val gpa = rememberSaveable { mutableStateOf("") }
-    val total = rememberSaveable { mutableStateOf("") }
-    val description = rememberSaveable { mutableStateOf("") }
+    val educ = educationViewModel.getEducation()
+    val education = rememberSaveable { mutableStateOf(educ?.education?:"") }
+    val course = rememberSaveable { mutableStateOf(educ?.course?:"") }
+    val university = rememberSaveable { mutableStateOf(educ?.university?:"") }
+    val startDate = rememberSaveable { mutableStateOf(educ?.startDate?:"") }
+    val endDate = rememberSaveable { mutableStateOf(educ?.endDate?:"") }
+    val isGraduated = rememberSaveable { mutableStateOf(educ?.graduated?:false) }
+    val gpa = rememberSaveable { mutableStateOf(educ?.gpa?.toString()?:"") }
+    val total = rememberSaveable { mutableStateOf(educ?.total?.toString()?:"") }
+    val description = rememberSaveable { mutableStateOf(educ?.description?:"") }
     val isLoading = rememberSaveable { mutableStateOf(false) }
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
@@ -71,6 +74,28 @@ fun EducationScreen(modifier: Modifier = Modifier,
     )
 
     val createEducationResult by educationViewModel.createEducationResult.observeAsState()
+    val updateEducationResult by educationViewModel.updateEducationResult.observeAsState()
+    val deleteEducationesult by educationViewModel.deleteEducationResult.observeAsState()
+    val deleteEducation by educationViewModel.deleteEducation.observeAsState()
+
+    LaunchedEffect(deleteEducation) {
+        if (deleteEducation == true && educ?.id != null) {
+            educationViewModel.deleteEducation(educ.id!!)
+        }
+    }
+
+    ObserveResult(
+        result = deleteEducationesult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
 
     ObserveResult(
         result = createEducationResult,
@@ -84,6 +109,25 @@ fun EducationScreen(modifier: Modifier = Modifier,
             CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
+
+    ObserveResult(
+        result = updateEducationResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            educationViewModel.setEducation(null)
+        }
+    }
 
     LazyColumn(modifier = modifier.fillMaxSize()){
         item {
@@ -103,6 +147,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                 Text(text = stringResource(R.string.description_optional), color = GrayFont, fontSize = 14.sp)
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomTextArea(
+                                    defaultText = description.value,
                                     label = stringResource(R.string.description),
 
                                     ) {
@@ -120,6 +165,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = education.value,
                                     label = stringResource(label),
                                     list = list,
                                     keyboardType = KeyboardType.Text,
@@ -139,6 +185,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = startDate.value,
                                         label = stringResource(R.string.from),
                                         isDate = true,
                                         trailingIcon = R.drawable.ic_polygon,
@@ -154,6 +201,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                             modifier = Modifier.padding(start = 10.dp))
                                         Spacer(modifier = Modifier.height(4.dp))
                                         CustomEditText(
+                                            defaultText = endDate.value,
                                             label = stringResource(R.string.to),
                                             isDate = true,
                                             isEditTextEnabled = isGraduated.value,
@@ -177,6 +225,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = gpa.value,
                                         label = stringResource(R.string.gpa),
                                         list = listOf(
                                             4.0, 3.9, 3.8, 3.7, 3.6, 3.5, 3.4, 3.3,
@@ -197,6 +246,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = total.value,
                                         label = stringResource(R.string.total),
                                         keyboardType = KeyboardType.Number,
                                         trailingIcon = R.drawable.ic_polygon,
@@ -228,6 +278,7 @@ fun EducationScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = stateMap[label]?.value?:"",
                                     label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
@@ -237,22 +288,28 @@ fun EducationScreen(modifier: Modifier = Modifier,
                     }
                 }
 
-                AppButton(text = stringResource(R.string.save),
+                AppButton(text = if (educ != null) stringResource(R.string.update) else stringResource(R.string.save),
                     isLoading = isLoading) {
                     val educationDto =  EducationDto(
-                        education = education.value,
-                        course = course.value,
-                        university = university.value,
-                        startDate = startDate.value,
-                        endDate = endDate.value,
+                        id = educ?.id,
+                        education = education.value.trim(),
+                        course = course.value.trim(),
+                        university = university.value.trim(),
+                        startDate = startDate.value.trim(),
+                        endDate = endDate.value.trim(),
                         graduated = isGraduated.value,
                         gpa = gpa.value.toFloat(),
                         total = total.value.toFloat(),
-                        description = description.value,
+                        description = description.value.trim(),
                         userId = -1
                     )
-                    if (isValid(educationDto))
-                        educationViewModel.createEducation(educationDto)
+                    if (isValid(educationDto, gpa.value, total.value)){
+                        if (educ != null){
+                            educationViewModel.updateEducation(educationDto)
+                        }else{
+                            educationViewModel.createEducation(educationDto)
+                        }
+                    }
                     else
                         showErrorMessage = true
                 }
@@ -264,11 +321,13 @@ fun EducationScreen(modifier: Modifier = Modifier,
         CustomMessage.Show(stringResource(R.string.add_necessary_data))
     }
 }
-fun isValid(educationDto: EducationDto): Boolean {
+fun isValid(educationDto: EducationDto, gpa: String, total: String): Boolean {
     var valid =  educationDto.education.isNotBlank() &&
             educationDto.course.isNotBlank() &&
             educationDto.university.isNotBlank() &&
             educationDto.startDate.isNotBlank() &&
+            gpa.isNotBlank() &&
+            total.isNotBlank() &&
             educationDto.gpa > 0 &&
             educationDto.total > 0
     if (valid && educationDto.graduated)  valid = educationDto.endDate.isNotBlank()
@@ -276,8 +335,7 @@ fun isValid(educationDto: EducationDto): Boolean {
     val dateComparator = DateComparator(dateFormat = "yyyy-MM-dd")
 
     if (valid && educationDto.graduated){
-        dateComparator.isAfter(educationDto.startDate, educationDto.endDate)
-        valid = false
+        valid = dateComparator.isBefore(educationDto.startDate, educationDto.endDate)
     }
     return valid  && !dateComparator.isAfterCurrentDate(educationDto.startDate)
 }

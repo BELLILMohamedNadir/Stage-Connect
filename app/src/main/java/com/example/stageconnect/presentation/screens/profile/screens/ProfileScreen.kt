@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.stageconnect.R
+import com.example.stageconnect.domain.model.NavigationItem
 import com.example.stageconnect.presentation.components.CustomCircularProgressIndicator
 import com.example.stageconnect.presentation.components.NotFound
 import com.example.stageconnect.presentation.components.ProfileImage
@@ -50,37 +51,38 @@ import com.example.stageconnect.ui.theme.GrayFont
 @Composable
 fun ProfileScreen(modifier: Modifier = Modifier,
                   navController: NavHostController,
-                  profileViewModel: ProfileViewModel) {
+                  profileViewModel: ProfileViewModel,
+) {
 
     val items = listOf(
-        Triple(stringResource(R.string.contact_information) , R.drawable.ic_contact_information) {
+        NavigationItem(stringResource(R.string.contact_information) , R.drawable.ic_contact_information, onClick = {navController.navigate(Screen.ContactInformation.route)}) {
             navController.navigate(Screen.ContactInformation.route)
         },
-        Triple(stringResource(R.string.summary) , R.drawable.ic_summary, {
+        NavigationItem(stringResource(R.string.summary) , R.drawable.ic_summary, onClick = {navController.navigate(Screen.Summary.route)}, {
             navController.navigate(Screen.Summary.route)
         }),
-        Triple(stringResource(R.string.work_experience) , R.drawable.ic_work_experience, {
-            navController.navigate(Screen.WorkExperience.route)
+        NavigationItem(stringResource(R.string.work_experience) , R.drawable.ic_work_experience, onClick = {navController.navigate(Screen.WorkExperience.route)}, {
+            navController.navigate(Screen.WorkExperienceDetails.route)
         }),
-        Triple(stringResource(R.string.education_) , R.drawable.ic_education, {
-            navController.navigate(Screen.Education.route)
+        NavigationItem(stringResource(R.string.education_) , R.drawable.ic_education, onClick = {navController.navigate(Screen.Education.route)},{
+            navController.navigate(Screen.EducationDetails.route)
         }),
-        Triple(stringResource(R.string.projects) , R.drawable.ic_project, {
-            navController.navigate(Screen.Project.route)
+        NavigationItem(stringResource(R.string.projects) , R.drawable.ic_project, onClick = {navController.navigate(Screen.Project.route)}, {
+            navController.navigate(Screen.ProjectDetails.route)
         }),
-        Triple(stringResource(R.string.certifications) , R.drawable.ic_certification, {
-            navController.navigate(Screen.Certification.route)
+        NavigationItem(stringResource(R.string.certifications) , R.drawable.ic_certification, onClick = {navController.navigate(Screen.Certification.route)},{
+            navController.navigate(Screen.CertificationDetails.route)
         }),
-        Triple(stringResource(R.string.internships) , R.drawable.ic_internship, {
-            navController.navigate(Screen.Internship.route)
+        NavigationItem(stringResource(R.string.internships) , R.drawable.ic_internship, onClick = {navController.navigate(Screen.Internship.route)},{
+            navController.navigate(Screen.InternshipDetails.route)
         }),
-        Triple(stringResource(R.string.skills) , R.drawable.ic_skill, {
+        NavigationItem(stringResource(R.string.skills) , R.drawable.ic_skill, onClick = {navController.navigate(Screen.Skill.route)},{
             navController.navigate(Screen.Skill.route)
         }),
-        Triple(stringResource(R.string.languages) , R.drawable.ic_language, {
-            navController.navigate(Screen.Language.route)
+        NavigationItem(stringResource(R.string.languages) , R.drawable.ic_language, onClick = {navController.navigate(Screen.Language.route)},{
+            navController.navigate(Screen.LanguageDetails.route)
         }),
-        Triple(stringResource(R.string.cv_resume) , R.drawable.ic_pdf, {
+        NavigationItem(stringResource(R.string.cv_resume) , R.drawable.ic_pdf, onClick = {navController.navigate(Screen.CvResume.route)},{
             navController.navigate(Screen.CvResume.route)
         }),
     )
@@ -134,10 +136,11 @@ fun ProfileScreen(modifier: Modifier = Modifier,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
-                items(items){ (text, image, onClick) ->
+                items(items){ (text, image, onClick, onCardClick) ->
                     CustomCard(
                         text = text,
-                        image = image
+                        image = image,
+                        onCardClick = onCardClick
                     ) {
                         onClick()
                     }

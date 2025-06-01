@@ -1,28 +1,36 @@
 package com.example.stageconnect.presentation.screens.profile.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stageconnect.data.dtos.AuthenticationResponse
+import com.example.stageconnect.data.dtos.CertificationDto
+import com.example.stageconnect.data.dtos.EducationDto
 import com.example.stageconnect.data.dtos.EstablishmentDto
+import com.example.stageconnect.data.dtos.InternshipDto
+import com.example.stageconnect.data.dtos.ProjectDto
 import com.example.stageconnect.data.dtos.RecruiterDto
 import com.example.stageconnect.data.dtos.StudentDto
 import com.example.stageconnect.data.dtos.UserDto
+import com.example.stageconnect.data.dtos.WorkExperienceDto
 import com.example.stageconnect.data.remote.repository.StorageRepository
 import com.example.stageconnect.domain.CONSTANT.USER_ID
+import com.example.stageconnect.domain.model.Internship
+import com.example.stageconnect.domain.model.Project
 import com.example.stageconnect.domain.model.enums.ROLE
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.DownloadFileUseCase
-import com.example.stageconnect.domain.usecases.UploadFileUseCase
-import com.example.stageconnect.domain.usecases.create.AddSkillsUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateEstablishmentUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateRecruiterUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateStudentUseCase
+import com.example.stageconnect.domain.usecases.file.DownloadFileUseCase
+import com.example.stageconnect.domain.usecases.file.UploadFileUseCase
+import com.example.stageconnect.domain.usecases.user.AddSkillsUseCase
+import com.example.stageconnect.domain.usecases.user.UpdateEstablishmentUseCase
+import com.example.stageconnect.domain.usecases.user.UpdateRecruiterUseCase
+import com.example.stageconnect.domain.usecases.user.UpdateSkillsUseCase
+import com.example.stageconnect.domain.usecases.user.UpdateStudentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,12 +44,14 @@ class ProfileViewModel @Inject constructor(
     private val updateRecruiterUseCase: UpdateRecruiterUseCase,
     private val updateEstablishmentUseCase: UpdateEstablishmentUseCase,
     private val addSkillsUseCase: AddSkillsUseCase,
+    private val updateSkillsUseCase: UpdateSkillsUseCase,
     private val uploadFileUseCase: UploadFileUseCase,
     private val downloadFileUseCase: DownloadFileUseCase,
     private val storageRepository: StorageRepository,
 ) : ViewModel() {
     private val _user = mutableStateOf<UserDto?>(value = null)
     val user: State<UserDto?> = _user
+
 
     private val _fileUri = mutableStateOf<Uri?>(null)
     val fileUri: State<Uri?> = _fileUri
@@ -95,6 +105,7 @@ class ProfileViewModel @Inject constructor(
             gender = response.gender,
             summary = response.summary,
             address = response.address,
+            skills = response.skills,
             currentPosition = response.currentPosition,
         )
     }
@@ -233,6 +244,19 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updateSkills(request: List<String>){
+        viewModelScope.launch {
+            _addSkillsResult.postValue(Result.Loading())
+            delay(100)
+            try {
+                val result = updateSkillsUseCase.execute(id = storageRepository.get(label = USER_ID)!!.toLong(),request)
+                _addSkillsResult.postValue(Result.Success(result))
+            } catch (e: Exception) {
+                _addSkillsResult.postValue(Result.Error(e))
+            }
+        }
+    }
+
     fun uploadFile(fileUri: Uri?, uploadPhoto: Boolean = false) {
         viewModelScope.launch {
             _uploadFileResult.postValue(Result.Loading(""))
@@ -270,4 +294,5 @@ class ProfileViewModel @Inject constructor(
         _uploadFileResult.value = null
         _addSkillsResult.value = null
     }
+
 }

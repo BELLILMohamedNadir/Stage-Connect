@@ -4,6 +4,7 @@ import android.media.Image
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,12 +37,14 @@ import com.example.stageconnect.ui.theme.Blue
 fun CustomCard(modifier: Modifier = Modifier,
                text: String,
                image: Int,
+               onCardClick: () -> Unit,
                onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth(fraction = 0.95f)
             .height(50.dp)
-            .clip(RoundedCornerShape(36.dp)),
+            .clip(RoundedCornerShape(36.dp))
+            .clickable { onCardClick() },
         elevation = CardDefaults.elevatedCardElevation(4.dp)
     ) {
         Row(

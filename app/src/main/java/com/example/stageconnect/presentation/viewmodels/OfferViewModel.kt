@@ -1,7 +1,6 @@
 package com.example.stageconnect.presentation.viewmodels
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -13,14 +12,14 @@ import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.data.remote.repository.StorageRepository
 import com.example.stageconnect.domain.CONSTANT.USER_ID
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.FilterUseCase
-import com.example.stageconnect.domain.usecases.SaveOfferUseCase
-import com.example.stageconnect.domain.usecases.UnSaveOfferUseCase
-import com.example.stageconnect.domain.usecases.create.CreateOfferUseCase
-import com.example.stageconnect.domain.usecases.read.GetAllOffersUseCase
-import com.example.stageconnect.domain.usecases.read.GetAllRecruiterOffersUseCase
-import com.example.stageconnect.domain.usecases.read.GetAllSavedOffersUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateOfferUseCase
+import com.example.stageconnect.domain.usecases.filter.FilterUseCase
+import com.example.stageconnect.domain.usecases.offer.SaveOfferUseCase
+import com.example.stageconnect.domain.usecases.offer.UnSaveOfferUseCase
+import com.example.stageconnect.domain.usecases.offer.CreateOfferUseCase
+import com.example.stageconnect.domain.usecases.offer.GetAllOffersUseCase
+import com.example.stageconnect.domain.usecases.offer.GetAllRecruiterOffersUseCase
+import com.example.stageconnect.domain.usecases.offer.GetAllSavedOffersUseCase
+import com.example.stageconnect.domain.usecases.offer.UpdateOfferUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

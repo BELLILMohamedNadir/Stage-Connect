@@ -27,12 +27,10 @@ import com.example.stageconnect.R
 fun CustomTopAppBar(modifier: Modifier = Modifier,
                     title: String = "",
                     navigationIcon: Int = R.drawable.ic_arrow_back,
-                    leadingIcon: Int = -1,
-                    onLeadingIconClick: () -> Unit = {},
+                    trailingIcon: Int = -1,
+                    onTrailingIconClick: () -> Unit = {},
                     onDismiss: () -> Unit,
                     ) {
-    // to manage leading icon
-    var icon by remember{ mutableIntStateOf(leadingIcon) }
 
     TopAppBar(
         title = {
@@ -56,20 +54,14 @@ fun CustomTopAppBar(modifier: Modifier = Modifier,
             }
         },
         actions = {
-            if (icon != -1){
-                    IconButton(onClick = {
-                        icon = if (icon == R.drawable.ic_save)
-                            R.drawable.ic_save_filled
-                        else
-                            R.drawable.ic_save
-
-                        onLeadingIconClick() }) {
-                        Icon(
-                            painter = painterResource(icon),
-                            contentDescription = "leadingIcon",
-                            tint = Color.Unspecified
-                        )
-                    }
+            if (trailingIcon != -1){
+                IconButton(onClick = { onTrailingIconClick() }) {
+                    Icon(
+                        painter = painterResource(trailingIcon),
+                        contentDescription = "trailingIcon",
+                        tint = Color.Unspecified
+                    )
+                }
             }
         }
     )

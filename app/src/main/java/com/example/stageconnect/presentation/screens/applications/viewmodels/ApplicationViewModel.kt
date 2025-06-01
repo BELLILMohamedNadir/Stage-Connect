@@ -1,7 +1,6 @@
 package com.example.stageconnect.presentation.screens.applications.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
@@ -9,25 +8,19 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stageconnect.data.dtos.ApplicationDto
-import com.example.stageconnect.data.dtos.OfferDto
 import com.example.stageconnect.data.remote.repository.StorageRepository
-import com.example.stageconnect.domain.CONSTANT.JWT_TOKEN
 import com.example.stageconnect.domain.CONSTANT.USER_ID
-import com.example.stageconnect.domain.CONSTANT.USER_ROLE
-import com.example.stageconnect.domain.model.Application
-import com.example.stageconnect.domain.model.enums.STATUS
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.FilterUseCase
-import com.example.stageconnect.domain.usecases.create.CreateApplicationUseCase
-import com.example.stageconnect.domain.usecases.delete.DeleteApplicationUseCase
-import com.example.stageconnect.domain.usecases.read.GetEstablishmentApplicationsUseCase
-import com.example.stageconnect.domain.usecases.read.GetRecruiterApplicationsUseCase
-import com.example.stageconnect.domain.usecases.read.GetStudentApplicationsUseCase
-import com.example.stageconnect.domain.usecases.update.UpdateApplicationUseCase
+import com.example.stageconnect.domain.usecases.filter.FilterUseCase
+import com.example.stageconnect.domain.usecases.application.CreateApplicationUseCase
+import com.example.stageconnect.domain.usecases.application.DeleteApplicationUseCase
+import com.example.stageconnect.domain.usecases.application.GetEstablishmentApplicationsUseCase
+import com.example.stageconnect.domain.usecases.application.GetRecruiterApplicationsUseCase
+import com.example.stageconnect.domain.usecases.application.GetStudentApplicationsUseCase
+import com.example.stageconnect.domain.usecases.application.UpdateApplicationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import okio.Path.Companion.toPath
 import javax.inject.Inject
 
 @HiltViewModel

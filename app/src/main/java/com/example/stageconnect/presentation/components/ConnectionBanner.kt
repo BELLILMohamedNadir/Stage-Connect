@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 
 @Composable
@@ -61,7 +62,7 @@ fun ConnectionBanner(
                 .background(backgroundColor),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = message, color = Color.White)
+            Text(text = message, color = Color.White, fontSize = 14.sp)
         }
     }
 }

@@ -52,21 +52,33 @@ import com.example.stageconnect.presentation.screens.offer.screens.AddOfferScree
 import com.example.stageconnect.presentation.screens.offer.screens.JobDetailsScreen
 import com.example.stageconnect.presentation.screens.offer.screens.OfferApplyScreen
 import com.example.stageconnect.presentation.screens.onboarding.screen.OnboardingScreen
+import com.example.stageconnect.presentation.screens.profile.screens.CertificationDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.CertificationScreen
 import com.example.stageconnect.presentation.screens.profile.screens.ContactInformationScreen
 import com.example.stageconnect.presentation.screens.profile.screens.CvResumeScreen
+import com.example.stageconnect.presentation.screens.profile.screens.EducationDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.EducationScreen
+import com.example.stageconnect.presentation.screens.profile.screens.InternshipDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.InternshipScreen
+import com.example.stageconnect.presentation.screens.profile.screens.LanguageDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.LanguageScreen
 import com.example.stageconnect.presentation.screens.profile.screens.OrganizationInfoScreen
 import com.example.stageconnect.presentation.screens.profile.screens.OrganizationProfileScreen
 import com.example.stageconnect.presentation.screens.profile.screens.ProfileDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.ProfileScreen
+import com.example.stageconnect.presentation.screens.profile.screens.ProjectDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.ProjectScreen
 import com.example.stageconnect.presentation.screens.profile.screens.SkillScreen
 import com.example.stageconnect.presentation.screens.profile.screens.SummaryScreen
+import com.example.stageconnect.presentation.screens.profile.screens.WorkExperienceDetailsScreen
 import com.example.stageconnect.presentation.screens.profile.screens.WorkExperienceScreen
+import com.example.stageconnect.presentation.screens.profile.viewmodels.CertificationViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.EducationViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.InternshipViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.LanguageViewModel
 import com.example.stageconnect.presentation.screens.profile.viewmodels.ProfileViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.ProjectViewModel
+import com.example.stageconnect.presentation.screens.profile.viewmodels.WorkExperienceViewModel
 import com.example.stageconnect.presentation.screens.savedjobs.screens.SavedJobsScreen
 import com.example.stageconnect.presentation.screens.search.screens.SearchScreen
 import com.example.stageconnect.presentation.screens.signin.SignInScreen
@@ -89,6 +101,12 @@ fun AppNavHost(modifier: Modifier = Modifier,
     val registerViewModel: RegisterViewModel = hiltViewModel()
     val roomViewModel: RoomViewModel = hiltViewModel()
     val filterViewModel: FilterViewModel = hiltViewModel()
+    val certificationViewModel: CertificationViewModel = hiltViewModel()
+    val educationViewModel: EducationViewModel = hiltViewModel()
+    val internshipViewModel: InternshipViewModel = hiltViewModel()
+    val languageViewModel: LanguageViewModel = hiltViewModel()
+    val projectViewModel: ProjectViewModel = hiltViewModel()
+    val workExperienceViewModel: WorkExperienceViewModel = hiltViewModel()
 
     NavHost(
         modifier = modifier,
@@ -701,12 +719,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     CustomTopAppBar(
                         onDismiss = { navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back,
-                        title = stringResource(R.string.work_experience)
+                        title = stringResource(R.string.work_experience),
+                        trailingIcon = if (workExperienceViewModel.getWorkExperience() != null) R.drawable.ic_delete else -1,
+                        onTrailingIconClick = {
+                            workExperienceViewModel.setDeleteWorkExperience()
+                        }
                     )
                 }
             ) { innerPadding ->
                 WorkExperienceScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    workExperienceViewModel = workExperienceViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -719,12 +742,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     CustomTopAppBar(
                         onDismiss = { navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back,
-                        title = stringResource(R.string.education_)
+                        title = stringResource(R.string.education_),
+                        trailingIcon = if (educationViewModel.getEducation() != null) R.drawable.ic_delete else -1,
+                        onTrailingIconClick = {
+                            educationViewModel.setDeleteEducation()
+                        }
                     )
                 }
             ) { innerPadding ->
                 EducationScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    educationViewModel = educationViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -737,12 +765,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     CustomTopAppBar(
                         onDismiss = { navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back,
-                        title = stringResource(R.string.projects)
+                        title = stringResource(R.string.projects),
+                        trailingIcon = if (projectViewModel.getProject() != null) R.drawable.ic_delete else -1,
+                        onTrailingIconClick = {
+                            projectViewModel.setDeleteProject()
+                        }
                     )
                 }
             ) { innerPadding ->
                 ProjectScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    projectViewModel = projectViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -755,12 +788,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     CustomTopAppBar(
                         onDismiss = { navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back,
-                        title = stringResource(R.string.certifications)
+                        title = stringResource(R.string.certifications),
+                        trailingIcon = if (certificationViewModel.getCertification() != null) R.drawable.ic_delete else -1,
+                        onTrailingIconClick = {
+                            certificationViewModel.setDeleteCertification()
+                        }
                     )
                 }
             ) { innerPadding ->
                 CertificationScreen(
                     modifier = Modifier.padding(innerPadding),
+                    certificationViewModel = certificationViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -773,12 +811,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     CustomTopAppBar(
                         onDismiss = { navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back,
-                        title = stringResource(R.string.internships)
+                        title = stringResource(R.string.internships),
+                        trailingIcon = if (internshipViewModel.getInternship() != null) R.drawable.ic_delete else -1,
+                        onTrailingIconClick = {
+                            internshipViewModel.setDeleteInternship()
+                        }
                     )
                 }
             ) { innerPadding ->
                 InternshipScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    internshipViewModel = internshipViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -791,12 +834,17 @@ fun AppNavHost(modifier: Modifier = Modifier,
                     CustomTopAppBar(
                         onDismiss = { navController.popBackStack() },
                         navigationIcon = R.drawable.ic_arrow_back,
-                        title = stringResource(R.string.languages)
+                        title = stringResource(R.string.languages),
+                        trailingIcon = if (languageViewModel.getLanguage() != null) R.drawable.ic_delete else -1,
+                        onTrailingIconClick = {
+                            languageViewModel.setDeleteLanguage()
+                        }
                     )
                 }
             ) { innerPadding ->
                 LanguageScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    languageViewModel = languageViewModel
                 ) {
                     navController.popBackStack()
                 }
@@ -876,6 +924,126 @@ fun AppNavHost(modifier: Modifier = Modifier,
             ) { innerPadding ->
                 OrganizationInfoScreen(modifier = Modifier.padding(innerPadding),
                     viewModel = profileViewModel)
+            }
+        }
+
+        composable(route = Screen.CertificationDetails.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.certifications)
+                    )
+                }
+            ) {innerPadding ->
+                CertificationDetailsScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    certificationViewModel = certificationViewModel,
+                    profileViewModel = profileViewModel
+                ) {
+                    navController.navigate(Screen.Certification.route)
+                }
+            }
+        }
+
+        composable(route = Screen.EducationDetails.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.education_)
+                    )
+                }
+            ) { innerPadding ->
+                EducationDetailsScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    educationViewModel = educationViewModel,
+                    profileViewModel = profileViewModel
+                ) {
+                    navController.navigate(Screen.Education.route)
+                }
+            }
+        }
+
+        composable(route = Screen.InternshipDetails.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.internships)
+                    )
+                }
+            ) { innerPadding ->
+                InternshipDetailsScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    internshipViewModel = internshipViewModel,
+                    profileViewModel = profileViewModel
+                ) {
+                    navController.navigate(Screen.Internship.route)
+                }
+            }
+        }
+
+        composable(route = Screen.LanguageDetails.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.languages)
+                    )
+                }
+            ) { innerPadding ->
+                LanguageDetailsScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    languageViewModel = languageViewModel,
+                    profileViewModel = profileViewModel
+                ) {
+                    navController.navigate(Screen.Language.route)
+                }
+            }
+        }
+
+        composable(route = Screen.ProjectDetails.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.projects)
+                    )
+                }
+            ) { innerPadding ->
+                ProjectDetailsScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    projectViewModel = projectViewModel,
+                    profileViewModel = profileViewModel
+                ) {
+                    navController.navigate(Screen.Project.route)
+                }
+            }
+        }
+
+        composable(route = Screen.WorkExperienceDetails.route) {
+            Scaffold(
+                topBar = {
+                    CustomTopAppBar(
+                        onDismiss = { navController.popBackStack() },
+                        navigationIcon = R.drawable.ic_arrow_back,
+                        title = stringResource(R.string.work_experience)
+                    )
+                }
+            ) { innerPadding ->
+                WorkExperienceDetailsScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    workExperienceViewModel = workExperienceViewModel,
+                    profileViewModel = profileViewModel
+                ) {
+                    navController.navigate(Screen.WorkExperience.route)
+                }
             }
         }
     }

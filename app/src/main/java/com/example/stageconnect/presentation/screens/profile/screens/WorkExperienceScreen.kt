@@ -1,5 +1,6 @@
 package com.example.stageconnect.presentation.screens.profile.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +44,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun WorkExperienceScreen(modifier: Modifier = Modifier,
-                         workExperienceViewModel: WorkExperienceViewModel = hiltViewModel(),
+                         workExperienceViewModel: WorkExperienceViewModel,
                          onNext: () -> Unit
 ) {
     val inputFields = listOf(
@@ -56,16 +59,17 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
         R.string.job_function to JobFunction.entries.map { it.label }
     )
 
-    val jobTitle = rememberSaveable { mutableStateOf("") }
-    val company = rememberSaveable { mutableStateOf("") }
-    val description = rememberSaveable { mutableStateOf("") }
-    val startDate = rememberSaveable { mutableStateOf("") }
-    val endDate = rememberSaveable { mutableStateOf("") }
-    val currentlyWorkHere = rememberSaveable { mutableStateOf(false) }
-    val employmentType = rememberSaveable { mutableStateOf("") }
-    val location = rememberSaveable { mutableStateOf("") }
-    val jobLevel = rememberSaveable { mutableStateOf("") }
-    val jobFunction = rememberSaveable { mutableStateOf("") }
+    val workExperience = workExperienceViewModel.getWorkExperience()
+    val jobTitle = rememberSaveable { mutableStateOf(workExperience?.jobTitle ?: "") }
+    val company = rememberSaveable { mutableStateOf(workExperience?.company ?: "") }
+    val description = rememberSaveable { mutableStateOf(workExperience?.description ?: "") }
+    val startDate = rememberSaveable { mutableStateOf(workExperience?.startDate ?: "") }
+    val endDate = rememberSaveable { mutableStateOf(workExperience?.endDate ?: "") }
+    val currentlyWorkHere = rememberSaveable { mutableStateOf(workExperience?.currentWorkHere ?: false) }
+    val employmentType = rememberSaveable { mutableStateOf(workExperience?.employmentType ?: "") }
+    val location = rememberSaveable { mutableStateOf(workExperience?.location ?: "") }
+    val jobLevel = rememberSaveable { mutableStateOf(workExperience?.jobLevel ?: "") }
+    val jobFunction = rememberSaveable { mutableStateOf(workExperience?.jobFunction ?: "") }
     val isLoading = rememberSaveable { mutableStateOf(false) }
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
@@ -78,6 +82,28 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
     )
 
     val createWorkExperienceResult by workExperienceViewModel.createWorkExperienceResult.observeAsState()
+    val updateWorkExperienceResult by workExperienceViewModel.updateWorkExperienceResult.observeAsState()
+    val deleteWorkExperienceResult by workExperienceViewModel.deleteWorkExperienceResult.observeAsState()
+    val deleteWorkExperience by workExperienceViewModel.deleteWorkExperience.observeAsState()
+
+    LaunchedEffect(deleteWorkExperience) {
+        if (deleteWorkExperience == true && workExperience?.id != null) {
+            workExperienceViewModel.deleteWorkExperience(workExperience.id!!)
+        }
+    }
+
+    ObserveResult(
+        result = deleteWorkExperienceResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
 
     ObserveResult(
         result = createWorkExperienceResult,
@@ -92,8 +118,29 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
         }
     )
 
+    ObserveResult(
+        result = updateWorkExperienceResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            workExperienceViewModel.setWorkExperience(null)
+        }
+    }
+
+
     LazyColumn(modifier = modifier.fillMaxSize()
     ){
+
         item {
             Column(
                 modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -110,6 +157,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                 Text(text = stringResource(R.string.description_optional), color = GrayFont, fontSize = 14.sp)
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomTextArea(
+                                    defaultText = description.value,
                                     label = stringResource(R.string.description),
                                     ) {
                                     description.value = it
@@ -128,6 +176,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = startDate.value,
                                         label = stringResource(R.string.from),
                                         isDate = true,
                                         trailingIcon = R.drawable.ic_polygon,
@@ -143,6 +192,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                             modifier = Modifier.padding(start = 10.dp))
                                         Spacer(modifier = Modifier.height(4.dp))
                                         CustomEditText(
+                                            defaultText = endDate.value,
                                             label = stringResource(R.string.to),
                                             isDate = true,
                                             isEditTextEnabled = !currentlyWorkHere.value,
@@ -176,6 +226,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = jobTitle.value,
                                     label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { jobTitle.value = it}
@@ -192,6 +243,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = company.value,
                                     label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { company.value = it }
@@ -209,6 +261,7 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = stateMap[label]?.value.toString(),
                                     label = stringResource(label),
                                     list = list,
                                     keyboardType = KeyboardType.Text,
@@ -218,23 +271,29 @@ fun WorkExperienceScreen(modifier: Modifier = Modifier,
                         }
                     }
                 }
-                AppButton(text = stringResource(R.string.save),
+                AppButton(text = if (workExperience != null) stringResource(R.string.update) else stringResource(R.string.save),
                     isLoading = isLoading) {
                     val workExperienceDto =  WorkExperienceDto(
-                        jobTitle = jobTitle.value,
-                        company = company.value,
-                        startDate = startDate.value,
-                        endDate = endDate.value,
+                        id = workExperience?.id,
+                        jobTitle = jobTitle.value.trim(),
+                        company = company.value.trim(),
+                        startDate = startDate.value.trim(),
+                        endDate = endDate.value.trim(),
                         currentWorkHere = currentlyWorkHere.value,
-                        description = description.value,
-                        employmentType = employmentType.value,
-                        location = location.value,
-                        jobLevel = jobLevel.value,
-                        jobFunction = jobFunction.value,
+                        description = description.value.trim(),
+                        employmentType = employmentType.value.trim(),
+                        location = location.value.trim(),
+                        jobLevel = jobLevel.value.trim(),
+                        jobFunction = jobFunction.value.trim(),
                         userId = -1
                     )
-                    if (isValid(workExperienceDto))
-                        workExperienceViewModel.createWorkExperience(workExperienceDto)
+                    if (isValid(workExperienceDto)){
+                        if (workExperience != null){
+                            workExperienceViewModel.updateWorkExperience(workExperienceDto)
+                        }else{
+                            workExperienceViewModel.createWorkExperience(workExperienceDto)
+                        }
+                    }
                     else
                         showErrorMessage = true
                 }
@@ -261,8 +320,7 @@ fun isValid(workExperienceDto: WorkExperienceDto): Boolean {
     val dateComparator = DateComparator(dateFormat = "yyyy-MM-dd")
 
     if (valid && !workExperienceDto.currentWorkHere){
-        dateComparator.isAfter(workExperienceDto.startDate, workExperienceDto.endDate)
-        valid = false
+        valid = dateComparator.isBefore(workExperienceDto.startDate, workExperienceDto.endDate?:"")
     }
     return valid && !dateComparator.isAfterCurrentDate(workExperienceDto.startDate)
 }

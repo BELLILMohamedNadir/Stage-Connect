@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +40,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun InternshipScreen(modifier: Modifier = Modifier,
-                  internshipViewModel: InternshipViewModel = hiltViewModel(),
+                  internshipViewModel: InternshipViewModel,
                      onNext: () -> Unit
 ) {
 
@@ -52,14 +54,15 @@ fun InternshipScreen(modifier: Modifier = Modifier,
         R.string.organization_website_link_optional,
     )
 
-    val title = rememberSaveable { mutableStateOf("") }
-    val organization = rememberSaveable { mutableStateOf("") }
-    val role = rememberSaveable { mutableStateOf("") }
-    val startDate = rememberSaveable { mutableStateOf("") }
-    val endDate = rememberSaveable { mutableStateOf("") }
-    val current = rememberSaveable { mutableStateOf(false) }
-    val description = rememberSaveable { mutableStateOf("") }
-    val websiteLink = rememberSaveable { mutableStateOf("") }
+    val internship = internshipViewModel.getInternship()
+    val title = rememberSaveable { mutableStateOf(internship?.title?:"") }
+    val organization = rememberSaveable { mutableStateOf(internship?.organization?:"") }
+    val role = rememberSaveable { mutableStateOf(internship?.role?:"") }
+    val startDate = rememberSaveable { mutableStateOf(internship?.startDate?:"") }
+    val endDate = rememberSaveable { mutableStateOf(internship?.endDate?:"") }
+    val current = rememberSaveable { mutableStateOf(internship?.current?:false) }
+    val description = rememberSaveable { mutableStateOf(internship?.description?:"") }
+    val websiteLink = rememberSaveable { mutableStateOf(internship?.organizationWebsite?:"") }
     val isLoading = rememberSaveable { mutableStateOf(false) }
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
@@ -71,6 +74,29 @@ fun InternshipScreen(modifier: Modifier = Modifier,
     )
 
     val createInternshipResult by internshipViewModel.createInternshipResult.observeAsState()
+    val updateInternshipResult by internshipViewModel.updateInternshipResult.observeAsState()
+    val deleteInternshipResult by internshipViewModel.deleteInternshipResult.observeAsState()
+    val deleteInternship by internshipViewModel.deleteInternship.observeAsState()
+
+    LaunchedEffect(deleteInternship) {
+        if (deleteInternship == true && internship?.id != null) {
+            internshipViewModel.deleteInternship(internship.id!!)
+        }
+    }
+
+    ObserveResult(
+        result = deleteInternshipResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
 
     ObserveResult(
         result = createInternshipResult,
@@ -85,6 +111,24 @@ fun InternshipScreen(modifier: Modifier = Modifier,
         }
     )
 
+    ObserveResult(
+        result = updateInternshipResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            internshipViewModel.setInternship(null)
+        }
+    }
 
     LazyColumn(modifier = modifier.fillMaxSize()){
         item {
@@ -104,6 +148,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                                 Text(text = stringResource(R.string.description_optional), color = GrayFont, fontSize = 14.sp)
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomTextArea(
+                                    defaultText = description.value,
                                     label = stringResource(R.string.description),
                                     ) {
                                     description.value = it
@@ -122,6 +167,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = startDate.value,
                                         label = stringResource(R.string.from),
                                         isDate = true,
                                         trailingIcon = R.drawable.ic_polygon,
@@ -137,6 +183,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                                             modifier = Modifier.padding(start = 10.dp))
                                         Spacer(modifier = Modifier.height(4.dp))
                                         CustomEditText(
+                                            defaultText = endDate.value,
                                             label = stringResource(R.string.to),
                                             isDate = true,
                                             isEditTextEnabled = !current.value,
@@ -169,6 +216,7 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = stateMap[label]?.value?:"",
                                     label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
@@ -178,21 +226,27 @@ fun InternshipScreen(modifier: Modifier = Modifier,
                     }
                 }
 
-                AppButton(text = stringResource(R.string.save),
+                AppButton(text = if (internship != null) stringResource(R.string.update) else stringResource(R.string.save),
                     isLoading = isLoading) {
                     val internshipDto =  InternshipDto(
-                        title = title.value,
-                        organization = organization.value,
-                        role = role.value,
-                        startDate = startDate.value,
-                        endDate = endDate.value,
+                        id = internship?.id,
+                        title = title.value.trim(),
+                        organization = organization.value.trim(),
+                        role = role.value.trim(),
+                        startDate = startDate.value.trim(),
+                        endDate = endDate.value.trim(),
                         current = current.value,
-                        description = description.value,
-                        organizationWebsite = websiteLink.value,
+                        description = description.value.trim(),
+                        organizationWebsite = websiteLink.value.trim(),
                         userId = -1
                     )
-                    if (isValid(internshipDto))
-                        internshipViewModel.createInternship(internshipDto)
+                    if (isValid(internshipDto)){
+                     if (internship != null){
+                         internshipViewModel.updateInternship(internshipDto)
+                     }else{
+                         internshipViewModel.createInternship(internshipDto)
+                     }
+                    }
                     else
                         showErrorMessage = true
                 }
@@ -215,8 +269,7 @@ fun isValid(internshipDto: InternshipDto): Boolean {
     val dateComparator = DateComparator(dateFormat = "yyyy-MM-dd")
 
     if (valid && !internshipDto.current){
-        dateComparator.isAfter(internshipDto.startDate, internshipDto.endDate)
-        valid = false
+        valid = dateComparator.isBefore(internshipDto.startDate, internshipDto.endDate)
     }
     return valid && !dateComparator.isAfterCurrentDate(internshipDto.startDate)
 }

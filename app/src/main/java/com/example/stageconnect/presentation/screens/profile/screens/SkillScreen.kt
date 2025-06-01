@@ -38,7 +38,12 @@ fun SkillScreen(modifier: Modifier = Modifier,
                 viewModel: ProfileViewModel,
                 onNext: () -> Unit
 ) {
-    val skills = remember { mutableStateListOf<String>() }
+    val skills = remember {
+        val defaultSkills = emptyList<String>()
+        val initialSkills = viewModel.user.value?.skills ?: defaultSkills
+        mutableStateListOf(*initialSkills.toTypedArray())
+    }
+
     val isLoading = rememberSaveable { mutableStateOf(false) }
     val addSkillsResult by viewModel.addSkillsResult.observeAsState()
 
@@ -47,6 +52,7 @@ fun SkillScreen(modifier: Modifier = Modifier,
         onLoading = {isLoading.value = true},
         onSuccess = {
             isLoading.value = false
+            viewModel.user.value?.skills = it
             viewModel.clearData()
             onNext()
         },
@@ -98,9 +104,13 @@ fun SkillScreen(modifier: Modifier = Modifier,
                 }
             }
         }
-        AppButton(text = stringResource(R.string.save), isLoading = isLoading) {
+        AppButton(text = if (viewModel.user.value?.skills?.isNotEmpty()!!) stringResource(R.string.update) else stringResource(R.string.save), isLoading = isLoading) {
             if (skills.isNotEmpty()){
-                viewModel.addSkills(skills)
+                if (viewModel.user.value?.skills?.isNotEmpty()!!){
+                    viewModel.updateSkills(skills)
+                }else{
+                    viewModel.addSkills(skills)
+                }
             }
         }
     }

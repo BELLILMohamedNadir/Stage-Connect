@@ -15,6 +15,7 @@ interface StudentRepository {
     suspend fun updateStudent(studentDto: String, file: File): StudentDto
     suspend fun updateRecruiter(recruiterDto: String, file: File): RecruiterDto
     suspend fun addSkills(id:Long, skills: List<String>): List<String>
+    suspend fun updateSkills(id:Long, skills: List<String>): List<String>
 }
 
 class StudentRepositoryImpl @Inject constructor(
@@ -42,6 +43,10 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun addSkills(id: Long, skills: List<String>): List<String> {
         return apiService.addSkills(id, skills)
+    }
+
+    override suspend fun updateSkills(id: Long, skills: List<String>): List<String> {
+        return apiService.updateSkills(id, skills)
     }
 
 }

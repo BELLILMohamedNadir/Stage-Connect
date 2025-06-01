@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +39,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun CertificationScreen(modifier: Modifier = Modifier,
-                        certificationViewModel: CertificationViewModel = hiltViewModel(),
+                        certificationViewModel: CertificationViewModel,
                         onNext: () -> Unit
 ) {
     val inputFields = listOf(
@@ -48,13 +50,14 @@ fun CertificationScreen(modifier: Modifier = Modifier,
         R.string.credential_id_optional,
         R.string.credential_url_optional
     )
-    val title = rememberSaveable { mutableStateOf("") }
-    val organization = rememberSaveable { mutableStateOf("") }
-    val dateOfIssue = rememberSaveable { mutableStateOf("") }
-    val dateOfExpiration = rememberSaveable { mutableStateOf("") }
-    val isCredentialNotWillExpire = rememberSaveable { mutableStateOf(true) }
-    val credentialId = rememberSaveable { mutableStateOf("") }
-    val credentialUrl = rememberSaveable { mutableStateOf("") }
+    val certification = certificationViewModel.getCertification()
+    val title = rememberSaveable { mutableStateOf(certification?.title?:"") }
+    val organization = rememberSaveable { mutableStateOf(certification?.organization?:"") }
+    val dateOfIssue = rememberSaveable { mutableStateOf(certification?.dateOfIssue?:"") }
+    val dateOfExpiration = rememberSaveable { mutableStateOf(certification?.expirationDate?:"") }
+    val isCredentialNotWillExpire = rememberSaveable { mutableStateOf(certification?.credentialWillNotExpire?:true) }
+    val credentialId = rememberSaveable { mutableStateOf(certification?.credentialId?:"") }
+    val credentialUrl = rememberSaveable { mutableStateOf(certification?.credentialUrl?:"") }
     val isLoading = rememberSaveable { mutableStateOf(false) }
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
@@ -68,6 +71,28 @@ fun CertificationScreen(modifier: Modifier = Modifier,
     )
 
     val createCertificationResult by certificationViewModel.createCertificationResult.observeAsState()
+    val updateCertificationResult by certificationViewModel.updateCertificationResult.observeAsState()
+    val deleteCertificationResult by certificationViewModel.deleteCertificationResult.observeAsState()
+    val deleteCertification by certificationViewModel.deleteCertification.observeAsState()
+
+    LaunchedEffect(deleteCertification) {
+        if (deleteCertification == true && certification?.id != null) {
+            certificationViewModel.deleteCertification(certification.id!!)
+        }
+    }
+
+    ObserveResult(
+        result = deleteCertificationResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
 
     ObserveResult(
         result = createCertificationResult,
@@ -81,6 +106,25 @@ fun CertificationScreen(modifier: Modifier = Modifier,
             CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
+
+    ObserveResult(
+        result = updateCertificationResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+           certificationViewModel.setCertification(null)
+        }
+    }
 
 
     LazyColumn(modifier = modifier.fillMaxSize()){
@@ -104,6 +148,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = dateOfIssue.value,
                                         label = stringResource(R.string.date_of_issue),
                                         isDate = true,
                                         trailingIcon = R.drawable.ic_polygon,
@@ -119,6 +164,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                                             modifier = Modifier.padding(start = 10.dp))
                                         Spacer(modifier = Modifier.height(4.dp))
                                         CustomEditText(
+                                            defaultText = dateOfExpiration.value,
                                             label = stringResource(R.string.expiration_date),
                                             isDate = true,
                                             trailingIcon = R.drawable.ic_polygon,
@@ -153,6 +199,7 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = stateMap[label]?.value?:"",
                                     label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     resetText = stateMap[label]!!,
@@ -163,20 +210,26 @@ fun CertificationScreen(modifier: Modifier = Modifier,
                     }
                 }
 
-                AppButton(text = stringResource(R.string.save),
+                AppButton(text = if (certification != null) stringResource(R.string.update) else stringResource(R.string.save),
                     isLoading = isLoading) {
                     val certificationDto =  CertificationDto(
-                        title = title.value,
-                        organization = organization.value,
-                        dateOfIssue = dateOfIssue.value,
-                        expirationDate = dateOfExpiration.value,
+                        id = certification?.id,
+                        title = title.value.trim(),
+                        organization = organization.value.trim(),
+                        dateOfIssue = dateOfIssue.value.trim(),
+                        expirationDate = dateOfExpiration.value.trim(),
                         credentialWillNotExpire = isCredentialNotWillExpire.value,
-                        credentialId = credentialId.value,
-                        credentialUrl = credentialUrl.value,
+                        credentialId = credentialId.value.trim(),
+                        credentialUrl = credentialUrl.value.trim(),
                         userId = -1
                     )
-                    if (isValid(certificationDto))
-                        certificationViewModel.createCertification(certificationDto)
+                    if (isValid(certificationDto)){
+                         if (certification != null){
+                             certificationViewModel.updateCertification(certificationDto)
+                         }else{
+                             certificationViewModel.createCertification(certificationDto)
+                         }
+                    }
                     else
                         showErrorMessage = true
                 }
@@ -198,8 +251,7 @@ fun isValid(certificationDto: CertificationDto): Boolean {
     val dateComparator = DateComparator(dateFormat = "yyyy-MM-dd")
 
     if (valid && !certificationDto.credentialWillNotExpire){
-        dateComparator.isAfter(certificationDto.dateOfIssue, certificationDto.expirationDate)
-        valid = false
+        valid = dateComparator.isBefore(certificationDto.dateOfIssue, certificationDto.expirationDate)
     }
     return valid && !dateComparator.isAfterCurrentDate(certificationDto.dateOfIssue)
 }

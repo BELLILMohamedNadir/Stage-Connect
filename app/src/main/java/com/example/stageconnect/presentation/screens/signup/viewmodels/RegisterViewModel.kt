@@ -1,17 +1,15 @@
 package com.example.stageconnect.presentation.screens.signup.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stageconnect.data.dtos.AuthDto
 import com.example.stageconnect.data.dtos.EstablishmentsDto
-import com.example.stageconnect.data.dtos.UserDto
 import com.example.stageconnect.domain.model.enums.ROLE
-import com.example.stageconnect.domain.usecases.RegisterUseCase
+import com.example.stageconnect.domain.usecases.auth.RegisterUseCase
 import com.example.stageconnect.domain.result.Result
-import com.example.stageconnect.domain.usecases.read.GetAllEstablishmentUseCase
+import com.example.stageconnect.domain.usecases.user.GetAllEstablishmentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

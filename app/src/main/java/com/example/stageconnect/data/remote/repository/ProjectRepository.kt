@@ -13,6 +13,9 @@ import javax.inject.Inject
 // Repository Interface
 interface ProjectRepository {
     suspend fun createProject(projectDto: ProjectDto): ProjectDto
+    suspend fun getAllProject(id: Long): List<ProjectDto>
+    suspend fun updateProject(id: Long, projectDto: ProjectDto): ProjectDto
+    suspend fun deleteProject(id: Long)
 }
 
 // Repository Implementation
@@ -21,6 +24,18 @@ class ProjectRepositoryImpl @Inject constructor(
 ) : ProjectRepository {
     override suspend fun createProject(projectDto: ProjectDto): ProjectDto {
         return apiService.createProject(projectDto)
+    }
+
+    override suspend fun getAllProject(id: Long): List<ProjectDto> {
+        return apiService.getProjects(id)
+    }
+
+    override suspend fun updateProject(id: Long, projectDto: ProjectDto): ProjectDto {
+        return apiService.updateProject(id, projectDto)
+    }
+
+    override suspend fun deleteProject(id: Long) {
+        apiService.deleteProject(id)
     }
 
 }

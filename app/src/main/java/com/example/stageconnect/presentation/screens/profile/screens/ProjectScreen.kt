@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +40,7 @@ import com.example.stageconnect.ui.theme.GrayFont
 
 @Composable
 fun ProjectScreen(modifier: Modifier = Modifier,
-                    projectViewModel: ProjectViewModel = hiltViewModel(),
+                    projectViewModel: ProjectViewModel,
                   onNext: () -> Unit
 ) {
     val inputFields = listOf(
@@ -50,13 +52,14 @@ fun ProjectScreen(modifier: Modifier = Modifier,
         R.string.project_url_optional,
     )
 
-    val projectName = rememberSaveable { mutableStateOf("") }
-    val role = rememberSaveable { mutableStateOf("") }
-    val startDate = rememberSaveable { mutableStateOf("") }
-    val endDate = rememberSaveable { mutableStateOf("") }
-    val current = rememberSaveable { mutableStateOf(false) }
-    val description = rememberSaveable { mutableStateOf("") }
-    val projectUrl = rememberSaveable { mutableStateOf("") }
+    val project = projectViewModel.getProject()
+    val projectName = rememberSaveable { mutableStateOf(project?.projectName?:"") }
+    val role = rememberSaveable { mutableStateOf(project?.role?:"") }
+    val startDate = rememberSaveable { mutableStateOf(project?.startDate?:"") }
+    val endDate = rememberSaveable { mutableStateOf(project?.endDate?:"") }
+    val current = rememberSaveable { mutableStateOf(project?.current?:false) }
+    val description = rememberSaveable { mutableStateOf(project?.description?:"") }
+    val projectUrl = rememberSaveable { mutableStateOf(project?.projectUrl?:"") }
     val isLoading = rememberSaveable { mutableStateOf(false) }
     var showErrorMessage by rememberSaveable { mutableStateOf(false) }
 
@@ -67,6 +70,29 @@ fun ProjectScreen(modifier: Modifier = Modifier,
     )
 
     val createProjectResult by projectViewModel.createProjectResult.observeAsState()
+    val updateProjectResult by projectViewModel.updateProjectResult.observeAsState()
+    val deleteProjectResult by projectViewModel.deleteProjectResult.observeAsState()
+    val deleteProject by projectViewModel.deleteProject.observeAsState()
+
+    LaunchedEffect(deleteProject) {
+        if (deleteProject == true && project?.id != null) {
+            projectViewModel.deleteProject(project.id!!)
+        }
+    }
+
+    ObserveResult(
+        result = deleteProjectResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
 
     ObserveResult(
         result = createProjectResult,
@@ -80,6 +106,25 @@ fun ProjectScreen(modifier: Modifier = Modifier,
             CustomMessage.Show(stringResource(R.string.error_occurred))
         }
     )
+
+    ObserveResult(
+        result = updateProjectResult,
+        onLoading = {isLoading.value = true},
+        onSuccess = {
+            isLoading.value = false
+            onNext()
+        },
+        onError = {
+            isLoading.value = false
+            CustomMessage.Show(stringResource(R.string.error_occurred))
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            projectViewModel.setProject(null)
+        }
+    }
 
     LazyColumn(modifier = modifier.fillMaxSize()){
         item {
@@ -98,6 +143,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                                 Text(text = stringResource(R.string.description_optional), color = GrayFont, fontSize = 14.sp)
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomTextArea(
+                                    defaultText = description.value,
                                     label = stringResource(R.string.description),
                                     ) {
                                     description.value = it
@@ -116,6 +162,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                                         modifier = Modifier.padding(start = 10.dp))
                                     Spacer(modifier = Modifier.height(4.dp))
                                     CustomEditText(
+                                        defaultText = startDate.value,
                                         label = stringResource(R.string.from),
                                         isDate = true,
                                         trailingIcon = R.drawable.ic_polygon,
@@ -131,6 +178,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                                             modifier = Modifier.padding(start = 10.dp))
                                         Spacer(modifier = Modifier.height(4.dp))
                                         CustomEditText(
+                                            defaultText = endDate.value,
                                             label = stringResource(R.string.to),
                                             isDate = true,
                                             isEditTextEnabled = !current.value,
@@ -163,6 +211,7 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp))
                                 Spacer(modifier = Modifier.height(10.dp))
                                 CustomEditText(
+                                    defaultText = stateMap[label]?.value?:"",
                                     label = stringResource(label),
                                     keyboardType = KeyboardType.Text,
                                     onValueChange = { stateMap[label]?.value = it }
@@ -171,20 +220,26 @@ fun ProjectScreen(modifier: Modifier = Modifier,
                         }
                     }
                 }
-                AppButton(text = stringResource(R.string.save),
+                AppButton(text = if (project != null) stringResource(R.string.update) else stringResource(R.string.save),
                     isLoading = isLoading) {
                     val projectDto =  ProjectDto(
-                        projectName = projectName.value,
-                        role = role.value,
-                        startDate = startDate.value,
-                        endDate = endDate.value,
+                        id = project?.id,
+                        projectName = projectName.value.trim(),
+                        role = role.value.trim(),
+                        startDate = startDate.value.trim(),
+                        endDate = endDate.value.trim(),
                         current = current.value,
-                        description = description.value,
-                        projectUrl = projectUrl.value,
+                        description = description.value.trim(),
+                        projectUrl = projectUrl.value.trim(),
                         userId = -1
                     )
-                    if (isValid(projectDto))
-                        projectViewModel.createProject(projectDto)
+                    if (isValid(projectDto)){
+                        if (project != null){
+                            projectViewModel.updateProject(projectDto)
+                        }else{
+                            projectViewModel.createProject(projectDto)
+                        }
+                    }
                     else
                         showErrorMessage = true
                 }
@@ -207,8 +262,7 @@ fun isValid(projectDto: ProjectDto): Boolean {
     val dateComparator = DateComparator(dateFormat = "yyyy-MM-dd")
 
     if (valid && !projectDto.current){
-        dateComparator.isAfter(projectDto.startDate, projectDto.endDate)
-        valid = false
+        valid = dateComparator.isBefore(projectDto.startDate, projectDto.endDate)
     }
     return valid && !dateComparator.isAfterCurrentDate(projectDto.startDate)
 }
