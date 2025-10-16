@@ -43,7 +43,7 @@
 
 - **Vue d'ensemble** des étudiants
 - **Suivi** des candidatures et placements
-- **Statistiques et rapports**
+- **Communication directe** avec les candidats et les recruteurs
 
 ---
 
@@ -74,11 +74,6 @@
 ### Firebase
 - **Cloud Messaging** - Notifications push
 - **Authentication** (optionnel)
-
-### Testing
-- **JUnit 4** - Tests unitaires
-- **Espresso** - Tests d'instrumentation
-- **MockK** - Mocking
 
 ---
 
@@ -327,22 +322,7 @@ Les contributions sont les bienvenues!
 
 ---
 
-## Documentation
-
-- [Architecture Guide](docs/ARCHITECTURE.md)
-- [API Documentation](docs/API.md)
-- [Setup Guide](docs/SETUP.md)
-- [Contributing Guide](docs/CONTRIBUTING.md)
-
----
-
-## License
-
-Ce projet est sous licence **MIT** - voir [LICENSE](LICENSE) pour détails.
-
-```
 Copyright (c) 2025 BELLIL Mohamed Nadir
-```
 
 ---
 
