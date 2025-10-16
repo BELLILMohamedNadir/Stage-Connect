@@ -9,9 +9,8 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple.svg)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-1.5+-green.svg)](https://developer.android.com/jetpack/compose)
 [![Min SDK](https://img.shields.io/badge/Min%20SDK-24-blue.svg)](https://developer.android.com/about/versions/nougat)
-[![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 
-[Features](#features) • [Architecture](#architecture) • [Installation](#installation) • [Documentation](#documentation) • [Contributing](#contributing)
+[Features](#features) • [Architecture](#architecture) • [Installation](#installation) • [Contributing](#contributing)
 
 </div>
 
